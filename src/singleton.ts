@@ -7,7 +7,7 @@ let threadsPromise: undefined | Promise<void>;
 const loadThreads = (): Promise<void> => {
   if (threadsPromise) return threadsPromise;
   const cpuCountLessOne = require('os').cpus().length - 1;
-  const maxThreads = +(process.env.WP_MAX_THREADPOOL_SIZE || '') || 12;
+  const maxThreads = +(process.env.MC_MAX_THREADPOOL_SIZE || '') || 12;
   const threadCount = Math.min(Math.max(cpuCountLessOne, 1), maxThreads);
   if (!__pool) __pool = new WorkerPool();
   threadsPromise = __pool
