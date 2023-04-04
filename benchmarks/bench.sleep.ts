@@ -1,7 +1,7 @@
-// node -r ts-node/register benchmarks/util/worker-pool/bench.sleep.ts
+// node -r ts-node/register benchmarks/bench.sleep.ts
 
-import {Suite} from 'benchmark';
-import {pool as getPool} from '../../../src/util/worker-pool';
+import {Bench} from 'tinybench';
+import {pool as getPool} from '../src';
 import {sleep} from './worker-sleep/methods';
 import {init} from './worker-sleep';
 
@@ -30,23 +30,15 @@ const main = async () => {
     await Promise.all(promises);
   };
   
-  const suite = new Suite;
+  const bench = new Bench;
   
-  suite
-    .add(`single threaded`, async () => {
-      await exec(execSingleCore);
-    }, {async: true})
-    .add(`worker pool`, async () => {
-      await exec(execMultiCore);
-    }, {async: true})
-    .on('cycle', (event: any) => {
-      console.log(String(event.target) + `, ${Math.round(1000000000 / event.target.hz)} ns/op`);
-    })
-    .on('complete', () => {
-      console.log('Fastest is ' + suite.filter('fastest').map('name'));
-      console.log('Running tasks:', pool.tasks());
-    })
-    .run();
+  bench
+    .add(`single threaded`, async () => await exec(execSingleCore))
+    .add(`worker pool`, async () => await exec(execMultiCore));
+  
+  await bench.run();
+
+  console.table(bench.tasks.map(({ name, result }) => ({ "Task Name": name, "Average Time (ps)": result?.mean! * 1000, "Variance (ps)": result?.variance! * 1000 })));
 };
 
 main();

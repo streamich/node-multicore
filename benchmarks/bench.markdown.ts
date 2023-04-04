@@ -1,9 +1,11 @@
-// node -r ts-node/register benchmarks/util/worker-pool/bench.sleep-2.ts
+// node -r ts-node/register benchmarks/bench.markdown.ts
 
 import {Bench} from 'tinybench';
-import {pool as getPool} from '../../src/util/worker-pool';
-import {sleep} from './worker-sleep/methods';
-import {init} from './worker-sleep';
+import {pool as getPool} from '../src';
+import {parse} from './worker-markdown/methods';
+import {init} from './worker-markdown';
+
+const md = '# Hello World';
 
 const main = async () => {
   const pool = await getPool();
@@ -12,11 +14,11 @@ const main = async () => {
   console.log(`Pool size: ${pool.size()}`);
   
   const execSingleCore = async () => {
-    return await sleep();
+    return await parse(md);
   };
   
   const execMultiCore = async () => {
-    return await module.exec('sleep', undefined);
+    return await module.exec('parse', md);
   };
 
   console.log('single thread', await execSingleCore());

@@ -1,4 +1,4 @@
-import {type WorkerPool, pool as getDefaultPool} from '../../../src/util/worker-pool';
+import {type WorkerPool, pool as getDefaultPool} from '../../src';
 import * as info from './info';
 
 export * from './info';

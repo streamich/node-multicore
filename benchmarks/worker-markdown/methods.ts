@@ -1,4 +1,4 @@
-import {WorkerFn} from '../../../../src/util/worker-pool';
+import {WorkerFn} from '../../src';
 const MarkdownIt = require('markdown-it');
 
 export const parse: WorkerFn<string, string> = (markdown: string) => {

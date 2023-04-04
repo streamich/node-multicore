@@ -1,4 +1,4 @@
-import {WorkerFn} from '../../../src/util/worker-pool';
+import {WorkerFn} from '../../src';
 
 export const sleep: WorkerFn<void, number> = async () => {
   let i = 0;
