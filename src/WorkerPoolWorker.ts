@@ -15,9 +15,6 @@ export class WorkerPoolWorker {
     return this.channels.size;
   }
 
-  /**
-   * Initialize the worker.
-   */
   public async init(): Promise<void> {
     const worker = this.worker;
     await new Promise<void>((resolve) => worker.once('message', resolve));

@@ -8,12 +8,9 @@
 //
 //     node -r ts-node/register src/demo/util/worker-pool/demo.ts
 
-import {WorkerPool} from '../../util/worker-pool';
-import {pool as getPool} from '../../util/worker-pool';
+import {WorkerPool, pool as getPool} from '..';
 import {ok, equal, deepEqual} from 'assert';
-import {of} from '../../reactive-rpc/common/util/of';
-import {Model} from '../../json-crdt';
-import * as crdtWorker from '../../json-crdt/worker';
+import {of} from '../util/of';
 import * as mathWorker from './worker-math';
 import * as testsWorker from './worker-tests';
 
@@ -31,7 +28,6 @@ const main = async () => {
 
   // Load a module.
   const math = (await mathWorker.init(pool)).api()
-  const crdt = (await crdtWorker.init(pool)).api();
 
   // Add 2 workers to the pool.
   await pool.addWorkers(2);
@@ -115,15 +111,6 @@ const main = async () => {
   deepEqual(buf3, new Uint8Array([55, 2, 3]), 'can transfer buffer both ways');
 
   equal(await tests.lol().promise, 123, 'can fetch a constant from a worker module');
-
-  const doc1 = Model.withLogicalClock();
-  const doc2 = doc1.fork();
-  doc1.api.root({foo: 'bar'});
-  deepEqual(doc1.view(), {foo: 'bar'});
-  deepEqual(doc2.view(), undefined);
-  const res = await crdt.applyPatch([doc2.toBinary(), doc1.api.builder.flush().toBinary()]).promise;
-  const doc3 = Model.fromBinary(res);
-  deepEqual(doc3.view(), {foo: 'bar'}, 'can apply CRDT patch in a worker thread');
 
   const channel = math.addThreeNumbers(3);
   channel.send(4);

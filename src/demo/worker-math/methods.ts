@@ -1,4 +1,4 @@
-import {type WorkerFn, taker, msg, type WorkerCh} from '../../../worker-pool';
+import {type WorkerFn, taker, msg, type WorkerCh} from '../..';
 
 const add: WorkerFn<[number, number], number> = ([a, b]) => {
   return msg(a + b, []);

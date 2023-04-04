@@ -1,6 +1,6 @@
 /* tslint:disable no-string-throw */
 
-import {type WorkerFn, msg} from '../../../util/worker-pool';
+import {type WorkerFn, msg} from '../..';
 
 const constant: WorkerFn<void, string> = () => {
   return msg('25', []);

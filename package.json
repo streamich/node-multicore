@@ -36,11 +36,11 @@
     "build:esm": "tsc --project tsconfig.build.json --module ESNext --target ESNEXT --outDir esm",
     "build:all": "concurrently \"yarn build:cjs\" \"yarn build:es6\" \"yarn build:es2020\" \"yarn build:esm\"",
     "build": "yarn build:es2020",
-    "test:all": "yarn lint && yarn test && yarn test:worker-pool",
+    "test:all": "yarn lint && yarn test && yarn demo",
     "jest": "node -r ts-node/register ./node_modules/.bin/jest",
     "test": "yarn jest --maxWorkers 7",
     "test:ci": "yarn jest --maxWorkers 3 --no-cache",
-    "test:worker-pool": "node -r ts-node/register src/demo/util/worker-pool/demo.ts"
+    "demo": "node -r ts-node/register src/demo/demo.ts"
   },
   "keywords": [
     "node",
