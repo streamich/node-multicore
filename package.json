@@ -56,7 +56,9 @@
     "thread pool"
   ],
   "peerDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "thingies": "^1.6.0"
+  },
   "devDependencies": {
     "@types/benchmark": "^2.1.2",
     "@types/jest": "^29.5.0",

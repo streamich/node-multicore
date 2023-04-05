@@ -1,6 +1,7 @@
 import {resolve} from 'path';
 import {Worker} from 'worker_threads';
 import {WorkerPoolChannel} from './WorkerPoolChannel';
+import {concurrency} from 'thingies/es2020';
 import type {TransferList, WpMsgError, WpMsgRequest, WpMsgResponse, WpMsgLoad, WpMsgLoaded, WpMsgChannel} from './types';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 
@@ -10,34 +11,37 @@ export class WorkerPoolWorker {
   private worker: Worker = new Worker(fileName);
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
-
+  
   public tasks(): number {
     return this.channels.size;
   }
-
+  
   public async init(): Promise<void> {
     const worker = this.worker;
     await new Promise<void>((resolve) => worker.once('message', resolve));
     worker.unref();
   }
-
+  
   /**
    * Load a module in this worker.
    * @param module Module to load.
-   */
+  */
+  private readonly initModuleConcurrencyOne = concurrency(1);
   public async initModule(module: WorkerPoolModule): Promise<void> {
     const worker = this.worker;
     const msg: WpMsgLoad = {
       type: 'load',
       file: module.file,
     };
-    worker.postMessage(msg);
-    await new Promise<void>((resolve) => {
-      worker.once('message', (msg: unknown) => {
-        if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded') {
-          module.onLoaded(msg as WpMsgLoaded);
-          resolve();
-        }
+    await this.initModuleConcurrencyOne(async () => {
+      worker.postMessage(msg);
+      await new Promise<void>((resolve) => {
+        worker.once('message', (msg: unknown) => {
+          if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded') {
+            module.onLoaded(msg as WpMsgLoaded);
+            resolve();
+          }
+        });
       });
     });
     if (!this.channels.size) worker.unref();

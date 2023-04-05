@@ -10,7 +10,7 @@
 
 import {WorkerPool, getSharedPool} from '..';
 import {ok, equal, deepEqual} from 'assert';
-import {of} from '../util/of';
+import {of} from 'thingies/es2020';
 import * as mathWorker from './multicore-math';
 import * as testsWorker from './multicore-tests';
 

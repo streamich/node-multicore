@@ -80,7 +80,7 @@ export class WorkerPool {
     const existingModule = this.modules.get(id);
     if (existingModule) {
       if (existingModule.file === file) return existingModule;
-      throw new Error(`Duplicate [module = ${id}] registered [file = ${existingModule.file}], attempted [file = ${file}].`);
+      throw new Error(`Duplicate [module = ${id}, file = ${existingModule.file}], attempted [file = ${file}].`);
     }
     const module = new WorkerPoolModule(this, id, file);
     await Promise.all(this.workers.map((worker) => worker.initModule(module)));
