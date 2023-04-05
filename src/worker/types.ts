@@ -10,8 +10,7 @@ export type WorkerMethodsMap = Readonly<{[key: string]: WorkerMethod<any, any, a
 export type WorkerMethod<Req = unknown, Res = unknown, In = unknown, Out = unknown> =
   | unknown // Constant value.
   | WorkerFn<Req, Res>
-  | WorkerCh<Req, Res, In, Out>
-  | WorkerAsyncGen<Req, Res, In, Out>;
+  | WorkerCh<Req, Res, In, Out>;
 
 export type WorkerFn<Req = unknown, Res = unknown> = (req: Req) => MaybePromise<Response<Res>>;
 
@@ -20,10 +19,6 @@ export type WorkerCh<Req = unknown, Res = unknown, In = unknown, Out = unknown> 
   send: WpSend<Out>,
   recv: WpRecv<In>,
 ) => MaybePromise<Response<Res>>;
-
-export type WorkerAsyncGen<Req = unknown, Res = unknown, In = unknown, Out = unknown> = (
-  req: Req,
-) => AsyncGenerator<In, Res, Out>;
 
 export type Response<R> = R | WorkerResponse<R>;
 
