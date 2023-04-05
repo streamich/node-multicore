@@ -2,8 +2,8 @@
 
 import {Bench} from 'tinybench';
 import {pool as getPool} from '../src';
-import {sleep} from './worker-sleep/methods';
-import {init} from './worker-sleep';
+import {sleep} from '../src/demo/multicore-sleep/methods';
+import {init} from '../src/demo/multicore-sleep';
 
 const main = async () => {
   const pool = await getPool();

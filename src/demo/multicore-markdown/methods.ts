@@ -1,8 +1,9 @@
-import {WorkerFn} from '../../src';
+import {WorkerFn} from '../..';
 const MarkdownIt = require('markdown-it');
 
+const md = new MarkdownIt();
+
 export const parse: WorkerFn<string, string> = (markdown: string) => {
-  const md = new MarkdownIt();
   return md.render(markdown);
 };
 

@@ -1,8 +1,9 @@
-import {WorkerFn} from '../../src';
+import {WorkerFn} from '../..';
 
-export const sleep: WorkerFn<void, number> = async () => {
+export const sleep: WorkerFn<number | void, number> = async (cycles?) => {
+  cycles = cycles || 100000;
   let i = 0;
-  while (i < 100000) i++;
+  while (i < cycles) i++;
   return i;
 };
 

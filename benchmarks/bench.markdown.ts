@@ -2,10 +2,9 @@
 
 import {Bench} from 'tinybench';
 import {pool as getPool} from '../src';
-import {parse} from './worker-markdown/methods';
-import {init} from './worker-markdown';
-
-const md = '# Hello World';
+import {parse} from '../src/demo/multicore-markdown/methods';
+import {init} from '../src/demo/multicore-markdown';
+import {md} from './md';
 
 const main = async () => {
   const pool = await getPool();
@@ -21,8 +20,8 @@ const main = async () => {
     return await module.exec('parse', md);
   };
 
-  console.log('single thread', await execSingleCore());
-  console.log('worker pool', await execMultiCore());
+  // console.log('single thread', await execSingleCore());
+  // console.log('worker pool', await execMultiCore());
   console.log('Running tasks:', pool.tasks());
   
   const concurrency = pool.size();
