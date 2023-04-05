@@ -11,8 +11,9 @@ const loadThreads = (): Promise<void> => {
   const threadCount = Math.min(Math.max(cpuCountLessOne, 1), maxThreads);
   if (!pool) pool = new WorkerPool();
   threadsPromise = pool
-    .addWorkers(threadCount)
+    .addWorker()
     .then(() => {
+      if (threadCount - 1 > 0) pool!.addWorkers(threadCount - 1).catch(() => {});
       threadsStarted = true;
     })
     .catch(() => {});
