@@ -1,12 +1,12 @@
 // node -r ts-node/register benchmarks/bench.sleep.ts
 
 import {Bench} from 'tinybench';
-import {pool as getPool} from '../src';
+import {getSharedPool} from '../src';
 import {sleep} from '../src/demo/multicore-sleep/methods';
 import {init} from '../src/demo/multicore-sleep';
 
 const main = async () => {
-  const pool = await getPool();
+  const pool = await getSharedPool();
   const module = await init(pool);
 
   console.log(`Pool size: ${pool.size()}`);

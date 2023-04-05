@@ -1,13 +1,13 @@
 // node -r ts-node/register benchmarks/bench.markdown.ts
 
 import {Bench} from 'tinybench';
-import {pool as getPool} from '../src';
+import {getSharedPool} from '../src';
 import {parse} from '../src/demo/multicore-markdown/methods';
 import {init} from '../src/demo/multicore-markdown';
 import {md} from './md';
 
 const main = async () => {
-  const pool = await getPool();
+  const pool = await getSharedPool();
   const module = await init(pool);
 
   console.log(`Pool size: ${pool.size()}`);
