@@ -1,6 +1,6 @@
 import {WorkerPool} from './WorkerPool';
 
-let __pool: WorkerPool | undefined;
+let pool: WorkerPool | undefined;
 let threadsStarted = false;
 let threadsPromise: undefined | Promise<void>;
 
@@ -9,8 +9,8 @@ const loadThreads = (): Promise<void> => {
   const cpuCountLessOne = require('os').cpus().length - 1;
   const maxThreads = +(process.env.MC_MAX_THREADPOOL_SIZE || '') || 12;
   const threadCount = Math.min(Math.max(cpuCountLessOne, 1), maxThreads);
-  if (!__pool) __pool = new WorkerPool();
-  threadsPromise = __pool
+  if (!pool) pool = new WorkerPool();
+  threadsPromise = pool
     .addWorkers(threadCount)
     .then(() => {
       threadsStarted = true;
@@ -19,7 +19,7 @@ const loadThreads = (): Promise<void> => {
   return threadsPromise;
 };
 
-export const pool = async (): Promise<WorkerPool> => {
+export const getSharedPool = async (): Promise<WorkerPool> => {
   if (!threadsStarted) await loadThreads();
-  return __pool!;
+  return pool!;
 };
