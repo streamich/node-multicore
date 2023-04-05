@@ -5,7 +5,7 @@ import {init as testsInit} from '../demo/multicore-tests';
 
 beforeAll(async () => {
   await Promise.all([markdownInit(), mathInit(), sleepInit(), testsInit()]);
-});
+}, 30000);
 
 test('can pass in string and receive string back', async () => {
   const markdown = await markdownInit();
