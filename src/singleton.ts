@@ -16,8 +16,7 @@ const loadThreads = (): Promise<void> => {
     .then(() => {
       if (threadCount - 1 > 0) {
         go(async () => {
-          for (let i = 0; i < threadCount - 1; i++)
-            await pool!.addWorker();
+          for (let i = 0; i < threadCount - 1; i++) await pool!.addWorker();
         });
       }
       threadsStarted = true;
