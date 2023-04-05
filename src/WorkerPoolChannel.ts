@@ -1,7 +1,7 @@
-import {Defer} from "./util/Defer";
-import {WorkerResponse} from "./WorkerResponse";
-import type {WorkerPoolWorker} from "./WorkerPoolWorker";
-import type {TransferList} from "./types";
+import {Defer} from './util/Defer';
+import {WorkerResponse} from './WorkerResponse';
+import type {WorkerPoolWorker} from './WorkerPoolWorker';
+import type {TransferList} from './types';
 
 export class WorkerPoolChannel<Res = unknown, In = unknown, Out = unknown> extends Defer<Res> {
   protected closed: boolean = false;

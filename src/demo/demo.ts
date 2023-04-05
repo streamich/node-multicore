@@ -28,7 +28,7 @@ const main = async () => {
   const pool = Math.random() > 0.5 ? await createPool() : await getSharedPool();
 
   // Load a module.
-  const math = (await mathWorker.init(pool)).api()
+  const math = (await mathWorker.init(pool)).api();
 
   // Add 2 workers to the pool.
   await pool.addWorkers(2);
@@ -85,7 +85,7 @@ const main = async () => {
   const [, err1] = await of(tests.throwsString().promise);
   ok(err1 === 'OMG!', 'can synchronously throw string');
   console.log('✅', 'can synchronously throw string');
-  
+
   const [, err2] = await of(tests.throwsStringAsync().promise);
   ok(err2 === 'OMG!', 'can asynchronously throw string');
   console.log('✅', 'can asynchronously throw string');

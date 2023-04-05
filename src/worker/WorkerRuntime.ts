@@ -106,7 +106,7 @@ export class WorkerRuntime {
     const loader = new Function('url', 'return import(url)');
     const module = await loader(url);
     if (module && typeof module === 'object' && module.methods && typeof module.methods === 'object')
-        return module as WorkerModule;
+      return module as WorkerModule;
     throw new Error('INVALID_MODULE');
   }
 

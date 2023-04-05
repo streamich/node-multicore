@@ -2,7 +2,15 @@ import {resolve} from 'path';
 import {Worker} from 'worker_threads';
 import {WorkerPoolChannel} from './WorkerPoolChannel';
 import {concurrency} from 'thingies/es2020';
-import type {TransferList, WpMsgError, WpMsgRequest, WpMsgResponse, WpMsgLoad, WpMsgLoaded, WpMsgChannel} from './types';
+import type {
+  TransferList,
+  WpMsgError,
+  WpMsgRequest,
+  WpMsgResponse,
+  WpMsgLoad,
+  WpMsgLoaded,
+  WpMsgChannel,
+} from './types';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 
 const fileName = resolve(__dirname, 'worker', 'main');
@@ -11,21 +19,21 @@ export class WorkerPoolWorker {
   private worker: Worker = new Worker(fileName);
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
-  
+
   public tasks(): number {
     return this.channels.size;
   }
-  
+
   public async init(): Promise<void> {
     const worker = this.worker;
     await new Promise<void>((resolve) => worker.once('message', resolve));
     worker.unref();
   }
-  
+
   /**
    * Load a module in this worker.
    * @param module Module to load.
-  */
+   */
   private readonly initModuleConcurrencyOne = concurrency(1);
   public async initModule(module: WorkerPoolModule): Promise<void> {
     const worker = this.worker;
@@ -52,7 +60,7 @@ export class WorkerPoolWorker {
     const [first] = msg;
     if (typeof first === 'number') this.onClose(msg as WpMsgResponse | WpMsgError);
     else this.onChannel(msg as WpMsgChannel);
-  }
+  };
 
   protected onClose(msg: WpMsgResponse | WpMsgError): void {
     const [seq, data, isError] = msg;
@@ -64,7 +72,8 @@ export class WorkerPoolWorker {
       this.worker.off('message', this.onmessage);
       this.worker.unref();
     }
-    if (isError) channel.onError(data); else channel.onResponse(data);
+    if (isError) channel.onError(data);
+    else channel.onResponse(data);
   }
 
   protected onChannel(msg: WpMsgChannel): void {
@@ -88,11 +97,7 @@ export class WorkerPoolWorker {
     this.worker.postMessage(msg, transferList);
   }
 
-  public ch(
-    id: number,
-    req: unknown,
-    transferList: TransferList | undefined,
-  ): WorkerPoolChannel {
+  public ch(id: number, req: unknown, transferList: TransferList | undefined): WorkerPoolChannel {
     const seq = this.seq++;
     const channel = new WorkerPoolChannel(seq, this);
     const channels = this.channels;

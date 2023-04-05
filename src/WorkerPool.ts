@@ -90,7 +90,7 @@ export class WorkerPool {
 
   /**
    * Pick the next random worker from the pool.
-   * 
+   *
    * @returns A worker pool worker.
    */
   public worker(): WorkerPoolWorker {
@@ -103,6 +103,6 @@ export class WorkerPool {
    * Shutdown all worker threads.
    */
   public async shutdown(): Promise<void> {
-    await Promise.all(this.workers.map(worker => worker.shutdown()))
+    await Promise.all(this.workers.map((worker) => worker.shutdown()));
   }
 }

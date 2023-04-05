@@ -30,10 +30,7 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
     return await this.ch(method, req as any, transferList, worker).promise;
   }
 
-  public fn<K extends keyof Methods>(
-    method: K,
-    worker: WorkerPoolWorker = this.pool.worker(),
-  ) {
+  public fn<K extends keyof Methods>(method: K, worker: WorkerPoolWorker = this.pool.worker()) {
     const id = this.module.methodId(method as string);
     type Res = Methods[K] extends WorkerMethod<any, infer R> ? R : never;
     type Chan = Methods[K] extends WorkerCh<any, infer I, infer O, any> ? [I, O] : never;
@@ -45,19 +42,17 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
 
   public api(worker?: WorkerPoolWorker): WorkerMethods<Methods> {
     const api: Partial<WorkerMethods<Methods>> = {};
-    for (const method of this.module.methods())
-      (api as any)[method] = this.fn(method, worker);
+    for (const method of this.module.methods()) (api as any)[method] = this.fn(method, worker);
     return api as WorkerMethods<Methods>;
   }
 }
 
-type Fn<Req, In, Out, Res> = (req: Req, transferList?: TransferList) =>
-  WorkerPoolChannel<Res, In, Out>;
+type Fn<Req, In, Out, Res> = (req: Req, transferList?: TransferList) => WorkerPoolChannel<Res, In, Out>;
 
 type WorkerMethods<T> = {
   [K in keyof T]: T[K] extends WorkerFn<infer Req, infer Res>
     ? Fn<Req, void, void, Res>
     : T[K] extends WorkerCh<infer Req, infer Res, infer Out, infer In>
-      ? Fn<Req, In, Out, Res>
-      : Fn<void, void, void, T[K]>;
+    ? Fn<Req, In, Out, Res>
+    : Fn<void, void, void, T[K]>;
 };

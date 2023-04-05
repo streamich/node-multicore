@@ -4,12 +4,7 @@ import {init as sleepInit} from '../demo/multicore-sleep';
 import {init as testsInit} from '../demo/multicore-tests';
 
 beforeAll(async () => {
-  await Promise.all([
-    markdownInit(),
-    mathInit(),
-    sleepInit(),
-    testsInit(),
-  ]);
+  await Promise.all([markdownInit(), mathInit(), sleepInit(), testsInit()]);
 });
 
 test('can pass in string and receive string back', async () => {
