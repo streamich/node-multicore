@@ -57,7 +57,7 @@
   ],
   "peerDependencies": {},
   "dependencies": {
-    "thingies": "^1.6.0"
+    "thingies": "^1.7.0"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.2",
