@@ -1,4 +1,5 @@
 import {WorkerPool} from './WorkerPool';
+import {go} from 'thingies';
 
 let pool: WorkerPool | undefined;
 let threadsStarted = false;
@@ -13,7 +14,12 @@ const loadThreads = (): Promise<void> => {
   threadsPromise = pool
     .addWorker()
     .then(() => {
-      if (threadCount - 1 > 0) pool!.addWorkers(threadCount - 1).catch(() => {});
+      if (threadCount - 1 > 0) {
+        go(async () => {
+          for (let i = 0; i < threadCount - 1; i++)
+            await pool!.addWorker();
+        });
+      }
       threadsStarted = true;
     })
     .catch(() => {});
