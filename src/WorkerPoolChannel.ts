@@ -1,5 +1,4 @@
 import {Defer} from './util/Defer';
-import {WorkerResponse} from './WorkerResponse';
 import type {WorkerPoolWorker} from './WorkerPoolWorker';
 import type {TransferList} from './types';
 
@@ -26,10 +25,8 @@ export class WorkerPoolChannel<Res = unknown, In = unknown, Out = unknown> exten
     if (this.ondata) this.ondata(data);
   }
 
-  public send(data: Out | WorkerResponse<Out>): void {
+  public send(data: Out, transferList?: TransferList): void {
     if (this.closed) throw new Error('CHANNEL_CLOSED');
-    let transferList: TransferList | undefined;
-    if (data instanceof WorkerResponse) ({data, transferList} = data);
     this.worker.sendChannelData(this.seq, data, transferList);
   }
 

@@ -1,5 +1,5 @@
 import {pathToFileURL} from 'url';
-import {WorkerResponse} from '../WorkerResponse';
+import {WorkerResponse} from './WorkerResponse';
 import type {MessagePort} from 'worker_threads';
 import type {
   TransferList,
