@@ -1,5 +1,5 @@
 import {resolve} from 'path';
-import {Worker} from 'worker_threads';
+import {Worker, type WorkerOptions} from 'worker_threads';
 import {WorkerPoolChannel} from './WorkerPoolChannel';
 import type {
   TransferList,
@@ -11,13 +11,22 @@ import type {
   WpMsgChannel,
 } from './types';
 import type {WorkerPoolModule} from './WorkerPoolModule';
+import type {WorkerPool} from './WorkerPool';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
 export class WorkerPoolWorker {
-  private worker: Worker = new Worker(fileName);
+  private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
+
+  constructor(protected readonly pool: WorkerPool) {
+    const options: WorkerOptions & {name: string} = {
+      trackUnmanagedFds: pool.options.trackUnmanagedFds,
+      name: pool.options.name,  
+    };
+    this.worker = new Worker(fileName, options);
+  }
 
   public tasks(): number {
     return this.channels.size;
@@ -25,7 +34,9 @@ export class WorkerPoolWorker {
 
   public async init(): Promise<void> {
     const worker = this.worker;
+    // TODO: Maybe replace this by "online" event.
     await new Promise<void>((resolve) => worker.once('message', resolve));
+    // TODO: handle "error" and "exit" messages.
     worker.unref();
   }
 

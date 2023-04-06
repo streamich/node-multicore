@@ -2,8 +2,14 @@ import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
 export interface WorkerPoolOptions {
+  /** Minimum number of worker threads to maintain. */
   min: number;
+  /** Maximum number of worker threads. */
   max: number;
+  /** Passed to worker threads, whether to close any unclosed file descriptors, defaults to false. */
+  trackUnmanagedFds: boolean;
+  /** Worker pool name. Passed to worker threads, name used for debugging purposes. Defualts ot "multicore".*/
+  name: string;
 }
 
 /**
@@ -41,18 +47,19 @@ export class WorkerPool {
   public modules: Map<string, WorkerPoolModule> = new Map();
   public readonly options: Readonly<WorkerPoolOptions>;
 
-  constructor(options: Partial<WorkerPoolOptions>) {
+  constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
       min: 1,
       max: +(process.env.MC_MAX_THREADPOOL_SIZE || '') || 4,
+      trackUnmanagedFds: false,
+      name: 'multicore',
       ...options,
     };
   }
 
   public async init(): Promise<void> {
-    if (this.options.min > 0) {
+    if (this.options.min > 0)
       await this.addWorkers(this.options.min);
-    }
   }
 
   /** Size of thread pool. */
