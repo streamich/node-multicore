@@ -19,6 +19,7 @@ export class WorkerPoolWorker {
   private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
+  public dead: boolean = false;
 
   constructor(protected readonly pool: WorkerPool) {
     const options: WorkerOptions & {name: string} = {
@@ -34,7 +35,12 @@ export class WorkerPoolWorker {
 
   public async init(): Promise<void> {
     const worker = this.worker;
-    // TODO: Maybe replace this by "online" event.
+    worker.on('exit', () => {
+      this.dead = true;
+      worker.removeAllListeners();
+      worker.unref();
+      // TODO: inform the pool
+    });
     await new Promise<void>((resolve) => worker.once('message', resolve));
     // TODO: handle "error" and "exit" messages.
     worker.unref();
