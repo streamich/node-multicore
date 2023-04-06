@@ -3,12 +3,15 @@ import type {WpMsgLoaded} from './types';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
 
+let id = 0;
+
 /**
  * {@link WorkerPoolModule} represents a module loaded in a {@link WorkerPool}.
  * Each module is loaded in all worker threads. Then any method exported on the
  * `.methods` export of that module can be called in any thread.
  */
 export class WorkerPoolModule {
+  public readonly id: number = id++;
   protected readonly toId: Map<string, number> = new Map();
 
   constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {}
