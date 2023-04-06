@@ -53,7 +53,7 @@ export class WorkerPoolWorker {
    * Load a module in this worker.
    * @param module Module to load.
    */
-  public async initModule(module: WorkerPoolModule): Promise<string[]> {
+  public async loadModule(module: WorkerPoolModule): Promise<string[]> {
     const worker = this.worker;
     const id = module.id;
     const msg: WpMsgLoad = {

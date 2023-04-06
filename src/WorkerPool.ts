@@ -66,7 +66,7 @@ export class WorkerPool {
     try {
       await worker.init();
       const modules = Array.from(this.modules.values());
-      for (const module of modules) await worker.initModule(module);
+      for (const module of modules) await worker.loadModule(module);
       this.workers.push(worker);
       worker$.resolve(worker);
     } catch (error) {
@@ -88,7 +88,7 @@ export class WorkerPool {
     const module = new WorkerPoolModule(this, specifier);
     this.modules.set(specifier, module);
     // TODO: Remove this loading, and load the module on demand. Make this method synchronous.
-    await Promise.all(this.workers.map((worker) => worker.initModule(module)));
+    await Promise.all(this.workers.map((worker) => worker.loadModule(module)));
     return module;
   }
 
