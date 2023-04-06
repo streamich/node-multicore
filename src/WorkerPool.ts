@@ -145,6 +145,9 @@ export class WorkerPool {
    * Shutdown all worker threads.
    */
   public async shutdown(): Promise<void> {
-    await Promise.all(this.workers.map((worker) => worker.shutdown()));
+    await Promise.allSettled([
+      ...this.workers.map((worker) => worker.shutdown()),
+      ...[...this.newWorkers].map(promise => promise.then(worker => worker.shutdown())),
+    ]);
   }
 }
