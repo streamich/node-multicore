@@ -11,7 +11,7 @@ import type {WorkerPool} from './WorkerPool';
 export class WorkerPoolModule {
   protected readonly toId: Map<string, number> = new Map();
 
-  constructor(protected readonly pool: WorkerPool, public readonly id: string, public readonly file: string) {}
+  constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {}
 
   public onLoaded({list}: WpMsgLoaded): void {
     for (const [id, name] of list) {

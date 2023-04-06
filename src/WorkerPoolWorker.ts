@@ -39,7 +39,7 @@ export class WorkerPoolWorker {
     const worker = this.worker;
     const msg: WpMsgLoad = {
       type: 'load',
-      file: module.file,
+      file: module.specifier,
     };
     await this.initModuleConcurrencyOne(async () => {
       worker.postMessage(msg);
