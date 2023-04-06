@@ -1,6 +1,11 @@
 import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
+export interface WorkerPoolOptions {
+  min: number;
+  max: number;
+}
+
 /**
  * {@link WorkerPool} represents a pool of worker threads.
  *
@@ -34,6 +39,21 @@ export class WorkerPool {
   protected nextWorker: number = 0;
   protected readonly workers: WorkerPoolWorker[] = [];
   public modules: Map<string, WorkerPoolModule> = new Map();
+  public readonly options: Readonly<WorkerPoolOptions>;
+
+  constructor(options: Partial<WorkerPoolOptions>) {
+    this.options = {
+      min: 1,
+      max: +(process.env.MC_MAX_THREADPOOL_SIZE || '') || 4,
+      ...options,
+    };
+  }
+
+  public async init(): Promise<void> {
+    if (this.options.min > 0) {
+      await this.addWorkers(this.options.min);
+    }
+  }
 
   /** Size of thread pool. */
   public size(): number {
