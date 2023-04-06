@@ -51,7 +51,7 @@ const bufferSetTransfer: WorkerFn<{arr: Uint8Array; pos: number; octet: number},
 };
 
 // These methods will be picked up by worker threads.
-export const methods = {
+export const external = {
   lol: 123,
   constant,
   constantAsync,
@@ -67,4 +67,4 @@ export const methods = {
 };
 
 // This type will be used in the main thread.
-export type Methods = typeof methods;
+export type Methods = typeof external;

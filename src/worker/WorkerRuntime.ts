@@ -99,13 +99,13 @@ export class WorkerRuntime {
   protected async importModule(file: string): Promise<WorkerModule> {
     try {
       const module = await import(file);
-      if (module && typeof module === 'object' && module.methods && typeof module.methods === 'object')
+      if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
         return module as WorkerModule;
     } catch {}
     const url = pathToFileURL(file).href;
     const loader = new Function('url', 'return import(url)');
     const module = await loader(url);
-    if (module && typeof module === 'object' && module.methods && typeof module.methods === 'object')
+    if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
       return module as WorkerModule;
     throw new Error('INVALID_MODULE');
   }
@@ -113,7 +113,7 @@ export class WorkerRuntime {
   /** Load a module in this worker thread. */
   protected async onLoad({file}: WpMsgLoad) {
     const module = await this.importModule(file);
-    const {methods} = module;
+    const {external: methods} = module;
     const keys = Object.keys(methods).sort();
     const list: [id: number, name: string][] = [];
     for (const key of keys) {

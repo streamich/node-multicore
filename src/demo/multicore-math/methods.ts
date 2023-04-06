@@ -22,7 +22,7 @@ const addThreeNumbers: WorkerCh<number, number, number, void> = async (one, send
 };
 
 // These methods will be picked up by worker threads.
-export const methods = {
+export const external = {
   add,
   subtract,
   multiply,
@@ -31,4 +31,4 @@ export const methods = {
 };
 
 // This type will be used in the main thread.
-export type Methods = typeof methods;
+export type Methods = typeof external;

@@ -8,9 +8,9 @@ export const sleep: WorkerFn<number | void, number> = async (cycles?) => {
 };
 
 // These methods will be picked up by worker threads.
-export const methods = {
+export const external = {
   sleep,
 };
 
 // This type will be used in the main thread.
-export type Methods = typeof methods;
+export type Methods = typeof external;
