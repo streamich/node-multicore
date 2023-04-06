@@ -78,7 +78,13 @@ export class WorkerPool {
    * Spin up a new worker thread in this {@link WorkerPool}.
    */
   public async addWorker(): Promise<void> {
-    const worker = new WorkerPoolWorker(this);
+    const worker = new WorkerPoolWorker({
+      pool: this,
+      onExit: () => {
+        const index = this.workers.indexOf(worker);
+        if (index >= 0) this.workers.splice(index, 1);
+      },
+    });
     await worker.init();
     const modules = Array.from(this.modules.values());
     for (const module of modules) await worker.initModule(module);

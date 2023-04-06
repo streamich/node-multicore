@@ -15,18 +15,23 @@ import type {WorkerPool} from './WorkerPool';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
+export interface WorkerPoolWorkerOptions {
+  pool: WorkerPool;
+  onExit: () => void;
+}
+
 export class WorkerPoolWorker {
   private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
-  public dead: boolean = false;
 
-  constructor(protected readonly pool: WorkerPool) {
-    const options: WorkerOptions & {name: string} = {
+  constructor(protected readonly options: WorkerPoolWorkerOptions) {
+    const {pool} = options;
+    const workerOptions: WorkerOptions & {name: string} = {
       trackUnmanagedFds: pool.options.trackUnmanagedFds,
       name: pool.options.name,  
     };
-    this.worker = new Worker(fileName, options);
+    this.worker = new Worker(fileName, workerOptions);
   }
 
   public tasks(): number {
@@ -35,11 +40,10 @@ export class WorkerPoolWorker {
 
   public async init(): Promise<void> {
     const worker = this.worker;
-    worker.on('exit', () => {
-      this.dead = true;
+    worker.once('exit', () => {
       worker.removeAllListeners();
       worker.unref();
-      // TODO: inform the pool
+      this.options.onExit();
     });
     await new Promise<void>((resolve) => worker.once('message', resolve));
     // TODO: handle "error" and "exit" messages.
