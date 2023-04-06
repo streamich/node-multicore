@@ -126,7 +126,7 @@ export class WorkerRuntime {
     const response: WpMsgLoaded = {
       type: 'loaded',
       id,
-      external: methods,
+      methods,
     };
     this.port.postMessage(response);
   }

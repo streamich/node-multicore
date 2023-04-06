@@ -47,7 +47,7 @@ export class WorkerPoolWorker {
         if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded' && (msg as WpMsgLoaded).id === id) {
           worker.off('message', onmessage);
           module.onLoaded(msg as WpMsgLoaded);
-          resolve((msg as WpMsgLoaded).external);
+          resolve((msg as WpMsgLoaded).methods);
         }
       };
       worker.on('message', onmessage);

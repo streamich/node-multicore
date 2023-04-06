@@ -16,10 +16,10 @@ export class WorkerPoolModule {
 
   constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {}
 
-  public onLoaded({external}: WpMsgLoaded): void {
+  public onLoaded({methods}: WpMsgLoaded): void {
     const moduleWord = this.id << 16;
-    for (let i = 0; i < external.length; i++)
-      this.toId.set(external[i], moduleWord | i);
+    for (let i = 0; i < methods.length; i++)
+      this.toId.set(methods[i], moduleWord | i);
   }
 
   public methodId(name: string): number {

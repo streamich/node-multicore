@@ -33,5 +33,5 @@ export interface WpMsgLoaded {
   /**
    * List of exported things from the module. Sorted by alphabetical order.
    */
-  external: string[];
+  methods: string[];
 }
