@@ -22,11 +22,16 @@ export class WorkerPoolModule {
     this.workers = new WorkerPoolModuleWorkerSet(pool, this);
   }
 
-  public async initializeWorker(worker: WorkerPoolWorker): Promise<void> {
-    const methods = await worker.loadModule(this);
+  public async loadInWorker(worker: WorkerPoolWorker): Promise<void> {
+    const methods = await worker.loadModule(this.id, this.specifier);
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++)
       this.toId.set(methods[i], moduleWord | i);
+  }
+
+  public async unloadInWorker(worker: WorkerPoolWorker): Promise<void> {
+    if (worker.dead) return;
+    await worker.unloadModule(this.id);
   }
 
   public methodId(name: string): number {
@@ -47,6 +52,7 @@ export class WorkerPoolModule {
     const workers = this.workers;
     const worker = workers.worker() || await workers.worker$();
     const id = this.methodId(method as string);
+    workers.maybeGrow(worker, id);
     const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
     return channel;
   }
@@ -64,6 +70,7 @@ export class WorkerPoolModule {
     return async (req: unknown, transferList?: TransferList | undefined): Promise<WorkerPoolChannel<Res, In, Out>> => {
       const workers = this.workers;
       const worker = workers.worker() || await workers.worker$();
+      workers.maybeGrow(worker, id);
       const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
       return channel;
     };

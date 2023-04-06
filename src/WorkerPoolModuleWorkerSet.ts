@@ -15,6 +15,10 @@ export class WorkerPoolModuleWorkerSet {
 
   constructor (protected readonly pool: WorkerPool, protected readonly module: WorkerPoolModule) {}
 
+  public size(): number {
+    return this.workers2.length;
+  }
+
   protected pickNewWorkerFromPool(): WorkerPoolWorker | undefined {
     const {workers1} = this;
     const allWorkers = this.pool.randomWorkers();
@@ -28,10 +32,10 @@ export class WorkerPoolModuleWorkerSet {
 
   private __addWorker: Promise<WorkerPoolWorker> | undefined;
 
-  protected async addWorker(): Promise<WorkerPoolWorker> {
+  protected addWorker(): Promise<WorkerPoolWorker> {
     if (!this.__addWorker) this.__addWorker = (async () => {
       const worker = this.pickNewWorkerFromPool() || await this.pool.worker$();
-      await this.module.initializeWorker(worker);
+      await this.module.loadInWorker(worker);
       this.workers1.add(worker);
       this.workers2.push(worker);
       this.__addWorker = undefined;
@@ -60,5 +64,15 @@ export class WorkerPoolModuleWorkerSet {
     const worker = this.worker();
     if (worker) return worker;
     return await this.addWorker();
+  }
+
+  public maybeGrow(worker: WorkerPoolWorker, methodId: number): void {
+    const activeWorkerTasks = worker.tasks();
+    const workerIsTooBusy = activeWorkerTasks > 2;
+    const stillWorkingOnTheSameTask = activeWorkerTasks > 0 && worker.lastMethodId === methodId;
+    if (!workerIsTooBusy || !stillWorkingOnTheSameTask) return;
+    const poolHasMoreWorkersToDraw = this.pool.size() > this.size();
+    if (poolHasMoreWorkersToDraw) this.addWorker().catch(() => {});
+    else this.pool.grow().catch(() => {});
   }
 }
