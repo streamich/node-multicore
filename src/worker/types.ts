@@ -1,8 +1,8 @@
-import type {WorkerResponse} from '../WorkerResponse';
+import type {WorkerResponse} from './WorkerResponse';
 import type {WpSend, WpRecv} from '../types';
 
 export interface WorkerModule {
-  methods: WorkerMethodsMap;
+  external: WorkerMethodsMap;
 }
 
 export type WorkerMethodsMap = Readonly<{[key: string]: WorkerMethod<any, any, any, any>}>;

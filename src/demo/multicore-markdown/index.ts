@@ -5,6 +5,6 @@ export * from './info';
 
 export const init = async (pool?: WorkerPool) => {
   if (!pool) pool = await getSharedPool();
-  const module = await pool.addModule(info.id, info.file);
+  const module = await pool.addModule(info.file);
   return module.typed<info.Methods>();
 };

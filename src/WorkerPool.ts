@@ -73,18 +73,15 @@ export class WorkerPool {
   /**
    * Load a module in all worker threads.
    *
-   * @param id A unique ID of the module.
-   * @param file Path to the worker file.
+   * @param specifier Path to the worker module file.
    */
-  public async addModule(id: string, file: string): Promise<WorkerPoolModule> {
-    const existingModule = this.modules.get(id);
-    if (existingModule) {
-      if (existingModule.file === file) return existingModule;
-      throw new Error(`Duplicate [module = ${id}, file = ${existingModule.file}], attempted [file = ${file}].`);
-    }
-    const module = new WorkerPoolModule(this, id, file);
+  public async addModule(specifier: string): Promise<WorkerPoolModule> {
+    const existingModule = this.modules.get(specifier);
+    if (existingModule) return existingModule;
+    const module = new WorkerPoolModule(this, specifier);
+    this.modules.set(specifier, module);
+    // TODO: Remove this loading, and load the module on demand. Make this method synchronous.
     await Promise.all(this.workers.map((worker) => worker.initModule(module)));
-    this.modules.set(id, module);
     return module;
   }
 

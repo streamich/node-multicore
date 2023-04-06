@@ -35,7 +35,7 @@ const main = async () => {
 
   // Load another module.
   const tests = (await testsWorker.init(pool)).api();
-  const testsPinned = pool.modules.get(testsWorker.id)!.typed<testsWorker.Methods>().api(pool.worker());
+  const testsPinned = pool.modules.get(testsWorker.file)!.typed<testsWorker.Methods>().api(pool.worker());
 
   ok((await math.add([1, 2]).promise) === 3, 'can execute math.add');
   ok((await math.add([2, 6], []).promise) === 8, 'can execute math.add with transfer list');

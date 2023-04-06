@@ -1,5 +1,5 @@
 import {pathToFileURL} from 'url';
-import {WorkerResponse} from '../WorkerResponse';
+import {WorkerResponse} from './WorkerResponse';
 import type {MessagePort} from 'worker_threads';
 import type {
   TransferList,
@@ -17,7 +17,7 @@ import type {
 import type {WorkerModule, WorkerFn, WorkerCh} from './types';
 
 export class WorkerRuntime {
-  protected readonly methods: (WorkerFn | WorkerCh)[] = [];
+  protected readonly methods: Map<number, (WorkerFn | WorkerCh)> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
 
   private readonly onmessage = (msg: WpMessage) => {
@@ -43,7 +43,7 @@ export class WorkerRuntime {
   }
 
   protected onRequest([seq, method, data]: WpMsgRequest): void {
-    const fn = this.methods[method];
+    const fn = this.methods.get(method);
     if (!fn) return;
     if (fn.length === 1) this.fn(seq, fn as WorkerFn, data);
     else this.ch(seq, fn, data);
@@ -96,37 +96,37 @@ export class WorkerRuntime {
     }
   }
 
-  protected async importModule(file: string): Promise<WorkerModule> {
+  protected async importModule(specifier: string): Promise<WorkerModule> {
     try {
-      const module = await import(file);
-      if (module && typeof module === 'object' && module.methods && typeof module.methods === 'object')
+      const module = await import(specifier);
+      if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
         return module as WorkerModule;
     } catch {}
-    const url = pathToFileURL(file).href;
+    const url = pathToFileURL(specifier).href;
     const loader = new Function('url', 'return import(url)');
     const module = await loader(url);
-    if (module && typeof module === 'object' && module.methods && typeof module.methods === 'object')
+    if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
       return module as WorkerModule;
     throw new Error('INVALID_MODULE');
   }
 
   /** Load a module in this worker thread. */
-  protected async onLoad({file}: WpMsgLoad) {
-    const module = await this.importModule(file);
-    const {methods} = module;
-    const keys = Object.keys(methods).sort();
-    const list: [id: number, name: string][] = [];
-    for (const key of keys) {
-      const method = methods[key];
+  protected async onLoad({id, specifier}: WpMsgLoad) {
+    const module = await this.importModule(specifier);
+    const {external} = module;
+    const methods = Object.keys(external).sort();
+    const moduleWord = id << 16;
+    for (let i = 0; i < methods.length; i++) {
+      const key = methods[i];
+      const method = external[key];
       const methodResolved = method instanceof Promise ? await method : method;
       const fn: WorkerFn | WorkerCh = typeof methodResolved === 'function' ? methodResolved : () => methodResolved;
-      const id = this.methods.length;
-      list.push([id, key]);
-      this.methods.push(fn);
+      this.methods.set(moduleWord | i, fn);
     }
     const response: WpMsgLoaded = {
       type: 'loaded',
-      list,
+      id,
+      methods,
     };
     this.port.postMessage(response);
   }

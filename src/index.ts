@@ -1,7 +1,7 @@
 // Worker thread.
 export type {WpRecv as WpTake, WpSend} from './types';
 export type {WorkerCh, WorkerFn, WorkerMethodsMap} from './worker/types';
-export {msg} from './WorkerResponse';
+export {msg} from './worker/WorkerResponse';
 export {taker} from './worker/util';
 
 // Main thread.

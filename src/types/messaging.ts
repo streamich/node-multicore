@@ -22,11 +22,16 @@ export interface WPMsgWorkerReady {
 /** Main thread request to load a module by a worker. */
 export interface WpMsgLoad {
   type: 'load';
-  file: string;
+  id: number;
+  specifier: string;
 }
 
 /** Module "loaded" response by a worker. */
 export interface WpMsgLoaded {
   type: 'loaded';
-  list: Array<[id: number, name: string]>;
+  id: number;
+  /**
+   * List of exported things from the module. Sorted by alphabetical order.
+   */
+  methods: string[];
 }
