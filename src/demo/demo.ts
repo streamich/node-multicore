@@ -16,7 +16,7 @@ import * as testsWorker from './multicore-tests';
 
 const createPool = async (): Promise<WorkerPool> => {
   const pool = new WorkerPool();
-  await pool.addWorkers(2);
+  await Promise.all([pool.addWorker(), pool.addWorker()]);
   return pool;
 };
 
@@ -31,7 +31,7 @@ const main = async () => {
   const math = (await mathWorker.init(pool)).api();
 
   // Add 2 workers to the pool.
-  await pool.addWorkers(2);
+  await Promise.all([pool.addWorker(), pool.addWorker()]);
 
   // Load another module.
   const tests = (await testsWorker.init(pool)).api();

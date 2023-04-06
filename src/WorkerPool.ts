@@ -13,35 +13,6 @@ export interface WorkerPoolOptions {
   name: string;
 }
 
-/**
- * {@link WorkerPool} represents a pool of worker threads.
- *
- * ```
- * const pool = new WorkerPool();
- * ```
- *
- * By default it starts with no threads running. You must add at least one
- * thread before you can use the pool.
- *
- * ```
- * await pool.addWorker(1);
- * ```
- *
- * Next you need to load a module. This is done by calling
- * {@link WorkerPool#addModule} method. The module is loaded in all worker threads.
- *
- * ```
- * await pool.addModule('my-module', './my-module.js');
- * await pool.addModule('my-module-2', './my-module-2.js');
- * ```
- *
- * You can add more threads and more modules at any time. But you must not
- * load them in parallel, i.e. you must not call {@link WorkerPool#addModule}
- * and {@link WorkerPool#addWorkers} at the same time.
- *
- * Currently, threads and modules cannot be removed from the thread pool. See
- * `src/demo/util/worker-pool/demo.ts` for an example.
- */
 export class WorkerPool {
   public readonly options: Readonly<WorkerPoolOptions>;
   protected nextWorker: number = 0;
@@ -60,8 +31,11 @@ export class WorkerPool {
   }
 
   public async init(): Promise<void> {
-    if (this.options.min > 0)
-      await this.addWorkers(this.options.min);
+    if (this.options.min > 0) {
+      await Promise.all(
+        Array.from({length: this.options.min}, () => this.addWorker()),
+      );
+    }
   }
 
   /** Size of thread pool. */
@@ -101,18 +75,6 @@ export class WorkerPool {
     } finally {
       this.newWorkers.delete(worker$.promise);
     }
-  }
-
-  /**
-   * Spins up {@link count} number of workers in parallel. Resolves the promise
-   * when all workers are ready.
-   *
-   * @param count Number of workers to spin up.
-   */
-  public async addWorkers(count: number): Promise<void> {
-    const promises: Promise<void>[] = [];
-    for (let i = 0; i < count; i++) promises.push(this.addWorker());
-    await Promise.all(promises);
   }
 
   /**
