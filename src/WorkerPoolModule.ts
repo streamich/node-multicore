@@ -1,7 +1,10 @@
 import {WorkerPoolModuleTyped} from './WorkerPoolModuleTyped';
-import type {WpMsgLoaded} from './types';
+import {WorkerPoolModuleWorkerSet} from './WorkerPoolModuleWorkerSet';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
+import type {WorkerPoolWorker} from './WorkerPoolWorker';
+import type {WorkerPoolChannel} from './WorkerPoolChannel';
+import type {TransferList} from './types';
 
 let id = 0;
 
@@ -13,10 +16,14 @@ let id = 0;
 export class WorkerPoolModule {
   public readonly id: number = id++;
   protected readonly toId: Map<string, number> = new Map();
+  protected readonly workers: WorkerPoolModuleWorkerSet;
 
-  constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {}
+  constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {
+    this.workers = new WorkerPoolModuleWorkerSet(pool, this);
+  }
 
-  public onLoaded({methods}: WpMsgLoaded): void {
+  public async initializeWorker(worker: WorkerPoolWorker): Promise<void> {
+    const methods = await worker.loadModule(this);
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++)
       this.toId.set(methods[i], moduleWord | i);
@@ -32,7 +39,37 @@ export class WorkerPoolModule {
     return Array.from(this.toId.keys());
   }
 
+  public async ch<Res = unknown, In = unknown, Out = unknown>(
+    method: string,
+    req: unknown,
+    transferList?: TransferList | undefined,
+  ): Promise<WorkerPoolChannel<Res, In, Out>> {
+    const workers = this.workers;
+    const worker = workers.worker() || await workers.worker$();
+    const id = this.methodId(method as string);
+    const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
+    return channel;
+  }
+
+  public async exec<R = unknown>(
+    method: string,
+    req: unknown,
+    transferList?: TransferList | undefined,
+  ): Promise<R> {
+    return (await this.ch<R>(method, req as any, transferList)).promise;
+  }
+
+  public async fn<Res = unknown, In = unknown, Out = unknown>(method: string) {
+    const id = this.methodId(method as string);
+    return async (req: unknown, transferList?: TransferList | undefined): Promise<WorkerPoolChannel<Res, In, Out>> => {
+      const workers = this.workers;
+      const worker = workers.worker() || await workers.worker$();
+      const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
+      return channel;
+    };
+  }
+
   public typed<Methods extends WorkerMethodsMap>(): WorkerPoolModuleTyped<Methods> {
-    return new WorkerPoolModuleTyped(this.pool, this);
+    return new WorkerPoolModuleTyped(this);
   }
 }

@@ -22,12 +22,13 @@ export class WorkerPool {
 
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
-      min: 1,
-      max: +(process.env.MC_MAX_THREADPOOL_SIZE || '') || 4,
+      min: +(process.env.MC_MIN_THREAD_POOL_SIZE || '') || 0,
+      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || 4,
       trackUnmanagedFds: false,
       name: 'multicore',
       ...options,
     };
+    if (this.options.min > this.options.max) throw new Error('MIN > MAX');
   }
 
   public async init(): Promise<void> {
@@ -53,7 +54,7 @@ export class WorkerPool {
   /**
    * Spin up a new worker thread in this {@link WorkerPool}.
    */
-  public async addWorker(): Promise<void> {
+  public async addWorker(): Promise<WorkerPoolWorker> {
     const worker = new WorkerPoolWorker({
       pool: this,
       onExit: () => {
@@ -65,8 +66,6 @@ export class WorkerPool {
     this.newWorkers.add(worker$.promise);
     try {
       await worker.init();
-      const modules = Array.from(this.modules.values());
-      for (const module of modules) await worker.loadModule(module);
       this.workers.push(worker);
       worker$.resolve(worker);
     } catch (error) {
@@ -75,6 +74,15 @@ export class WorkerPool {
     } finally {
       this.newWorkers.delete(worker$.promise);
     }
+    return worker;
+  }
+
+  public async grow(): Promise<void> {
+    if (this.newWorkers.size > 0) {
+      await this.newWorkers.values().next().value;
+      return;
+    }
+    if (this.size() < this.options.max) await this.addWorker();
   }
 
   /**
@@ -82,25 +90,33 @@ export class WorkerPool {
    *
    * @param specifier Path to the worker module file.
    */
-  public async addModule(specifier: string): Promise<WorkerPoolModule> {
+  public addModule(specifier: string): WorkerPoolModule {
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
     const module = new WorkerPoolModule(this, specifier);
     this.modules.set(specifier, module);
-    // TODO: Remove this loading, and load the module on demand. Make this method synchronous.
-    await Promise.all(this.workers.map((worker) => worker.loadModule(module)));
     return module;
   }
 
-  /**
-   * Pick the next random worker from the pool.
-   *
-   * @returns A worker pool worker.
-   */
-  public worker(): WorkerPoolWorker {
+  /** Pick the next random worker from the pool. */
+  public worker(): WorkerPoolWorker | undefined {
     const worker = this.workers[this.nextWorker];
+    if (!worker) return;
     this.nextWorker = (this.nextWorker + 1) % this.workers.length;
     return worker;
+  }
+
+  /** Pick the next random worker from the pool. */
+  public async worker$(): Promise<WorkerPoolWorker> {
+    return this.worker() || this.newWorkers.values().next().value || this.addWorker();
+  }
+
+  /** Returns list of workers in random order. */
+  public randomWorkers(): WorkerPoolWorker[] {
+    const workers = this.workers;
+    const length = workers.length;
+    const randomIndex = Math.round(Math.random() * length);
+    return workers.slice(randomIndex).concat(workers.slice(0, randomIndex));
   }
 
   /**

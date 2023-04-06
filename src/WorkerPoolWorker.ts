@@ -21,6 +21,7 @@ export interface WorkerPoolWorkerOptions {
 }
 
 export class WorkerPoolWorker {
+  public dead: boolean = false;
   private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
@@ -40,7 +41,11 @@ export class WorkerPoolWorker {
 
   public async init(): Promise<void> {
     const worker = this.worker;
+    worker.once('error', () => {
+      this.dead = true;
+    });
     worker.once('exit', () => {
+      this.dead = true;
       worker.removeAllListeners();
       worker.unref();
       this.options.onExit();
@@ -62,18 +67,17 @@ export class WorkerPoolWorker {
       specifier: module.specifier,
     };
     this.send(msg, undefined);
-    const external = await new Promise<string[]>((resolve) => {
+    const methods = await new Promise<string[]>((resolve) => {
       const onmessage = (msg: unknown) => {
         if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded' && (msg as WpMsgLoaded).id === id) {
           worker.off('message', onmessage);
-          module.onLoaded(msg as WpMsgLoaded);
           resolve((msg as WpMsgLoaded).methods);
         }
       };
       worker.on('message', onmessage);
     });
     if (!this.channels.size) worker.unref();
-    return external;
+    return methods;
   }
 
   private onmessage = (msg: WpMsgResponse | WpMsgError | WpMsgChannel): void => {
