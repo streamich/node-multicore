@@ -1,3 +1,4 @@
+import {Defer} from 'thingies';
 import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
@@ -42,10 +43,11 @@ export interface WorkerPoolOptions {
  * `src/demo/util/worker-pool/demo.ts` for an example.
  */
 export class WorkerPool {
+  public readonly options: Readonly<WorkerPoolOptions>;
   protected nextWorker: number = 0;
   protected readonly workers: WorkerPoolWorker[] = [];
+  protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
   public modules: Map<string, WorkerPoolModule> = new Map();
-  public readonly options: Readonly<WorkerPoolOptions>;
 
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
@@ -85,10 +87,20 @@ export class WorkerPool {
         if (index >= 0) this.workers.splice(index, 1);
       },
     });
-    await worker.init();
-    const modules = Array.from(this.modules.values());
-    for (const module of modules) await worker.initModule(module);
-    this.workers.push(worker);
+    const worker$ = new Defer<WorkerPoolWorker>();
+    this.newWorkers.add(worker$.promise);
+    try {
+      await worker.init();
+      const modules = Array.from(this.modules.values());
+      for (const module of modules) await worker.initModule(module);
+      this.workers.push(worker);
+      worker$.resolve(worker);
+    } catch (error) {
+      worker$.reject(error);
+      throw error;
+    } finally {
+      this.newWorkers.delete(worker$.promise);
+    }
   }
 
   /**

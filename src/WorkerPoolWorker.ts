@@ -46,7 +46,6 @@ export class WorkerPoolWorker {
       this.options.onExit();
     });
     await new Promise<void>((resolve) => worker.once('message', resolve));
-    // TODO: handle "error" and "exit" messages.
     worker.unref();
   }
 
