@@ -77,12 +77,11 @@ export class WorkerPool {
     return worker;
   }
 
-  public async grow(): Promise<void> {
-    if (this.newWorkers.size > 0) {
-      await this.newWorkers.values().next().value;
-      return;
-    }
-    if (this.size() < this.options.max) await this.addWorker();
+  public async grow(): Promise<WorkerPoolWorker | undefined> {
+    if (this.newWorkers.size > 0)
+      return await this.newWorkers.values().next().value;
+    if (this.size() < this.options.max) return await this.addWorker();
+    return undefined;
   }
 
   /**

@@ -70,7 +70,7 @@ export class WorkerPoolModuleWorkerSet {
     const activeWorkerTasks = worker.tasks();
     const workerIsTooBusy = activeWorkerTasks > 2;
     const stillWorkingOnTheSameTask = activeWorkerTasks > 0 && worker.lastMethodId === methodId;
-    if (!workerIsTooBusy || !stillWorkingOnTheSameTask) return;
+    if (!workerIsTooBusy && !stillWorkingOnTheSameTask) return;
     const poolHasMoreWorkersToDraw = this.pool.size() > this.size();
     if (poolHasMoreWorkersToDraw) this.addWorker().catch(() => {});
     else this.pool.grow().catch(() => {});
