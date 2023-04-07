@@ -1,4 +1,5 @@
-import {Defer, go, mutex} from 'thingies';
+import {cpus} from 'os';
+import {Defer, mutex} from 'thingies';
 import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
@@ -23,7 +24,7 @@ export class WorkerPool {
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
       min: +(process.env.MC_MIN_THREAD_POOL_SIZE || '') || 0,
-      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || 4,
+      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || Math.max(1, Math.min(cpus().length - 1, 8)),
       trackUnmanagedFds: false,
       name: 'multicore',
       ...options,
