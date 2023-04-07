@@ -34,36 +34,18 @@ test('pool continues to have only one worker when tasks are executed sequentiall
 
 test('once tasks compete for a thread, pool adds another worker', async () => {
   expect(pool.size()).toBe(1);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
   await until(() => pool.size() === 2);
   expect(pool.size()).toBe(2);
 });
 
 test('does not grow the pool size more, when concurrency is enough', async () => {
   expect(pool.size()).toBe(2);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
-  await Promise.all([
-    math.exec('add', [1, 2]),
-    math.exec('add', [1, 2]),
-  ]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
+  await Promise.all([math.exec('add', [1, 2]), math.exec('add', [1, 2])]);
   expect(pool.size()).toBe(2);
   await tick(300);
   expect(pool.size()).toBe(2);

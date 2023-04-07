@@ -28,7 +28,7 @@ export class WorkerPoolWorker {
     const {pool} = options;
     const workerOptions: WorkerOptions & {name: string} = {
       trackUnmanagedFds: pool.options.trackUnmanagedFds,
-      name: pool.options.name,  
+      name: pool.options.name,
     };
     this.worker = new Worker(fileName, workerOptions);
   }
@@ -62,7 +62,12 @@ export class WorkerPoolWorker {
     this.send(msg, undefined);
     const methods = await new Promise<string[]>((resolve) => {
       const onmessage = (msg: unknown) => {
-        if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded' && (msg as WpMsgLoaded).id === id) {
+        if (
+          msg &&
+          typeof msg === 'object' &&
+          (msg as WpMsgLoaded).type === 'loaded' &&
+          (msg as WpMsgLoaded).id === id
+        ) {
           worker.off('message', onmessage);
           resolve((msg as WpMsgLoaded).methods);
         }
@@ -128,7 +133,7 @@ export class WorkerPoolWorker {
   }
 
   public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WorkerPoolChannel): void {
-    const id = this.lastMethodId = channel.methodId;
+    const id = (this.lastMethodId = channel.methodId);
     const seq = this.seq++;
     const channels = this.channels;
     channel.onsend = (data, transferList) => this.sendChannelData(seq, data, transferList);

@@ -37,9 +37,7 @@ export class WorkerPool {
 
   public async init(): Promise<void> {
     if (this.options.min > 0) {
-      await Promise.all(
-        Array.from({length: this.options.min}, () => this.addWorker()),
-      );
+      await Promise.all(Array.from({length: this.options.min}, () => this.addWorker()));
     }
   }
 
@@ -85,8 +83,7 @@ export class WorkerPool {
 
   @mutex
   public async grow(): Promise<WorkerPoolWorker | undefined> {
-    if (this.newWorkers.size > 0)
-      return await this.newWorkers.values().next().value;
+    if (this.newWorkers.size > 0) return await this.newWorkers.values().next().value;
     if (this.size() < this.options.max) return await this.addWorker();
     return undefined;
   }
@@ -131,7 +128,7 @@ export class WorkerPool {
   public async shutdown(): Promise<void> {
     await Promise.allSettled([
       ...this.workers.map((worker) => worker.shutdown()),
-      ...[...this.newWorkers].map(promise => promise.then(worker => worker.shutdown())),
+      ...[...this.newWorkers].map((promise) => promise.then((worker) => worker.shutdown())),
     ]);
   }
 }

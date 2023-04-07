@@ -15,7 +15,7 @@ export class WorkerPoolModuleWorkerSet {
   protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
   protected nextWorker: number = 0;
 
-  constructor (protected readonly pool: WorkerPool, protected readonly module: WorkerPoolModule) {}
+  constructor(protected readonly pool: WorkerPool, protected readonly module: WorkerPoolModule) {}
 
   public size(): number {
     return this.workers2.length;
@@ -25,7 +25,7 @@ export class WorkerPoolModuleWorkerSet {
   public async init(): Promise<void> {
     if (this.size() > 0) return;
     await this.grow();
-  };
+  }
 
   protected pickNewWorkerFromPool(): WorkerPoolWorker | undefined {
     const {workers1} = this;
@@ -40,7 +40,7 @@ export class WorkerPoolModuleWorkerSet {
 
   @mutex
   protected async addWorkerFromPool(): Promise<WorkerPoolWorker> {
-    const worker = this.pickNewWorkerFromPool() || await this.pool.worker$();
+    const worker = this.pickNewWorkerFromPool() || (await this.pool.worker$());
     await this.addWorker(worker);
     return worker;
   }

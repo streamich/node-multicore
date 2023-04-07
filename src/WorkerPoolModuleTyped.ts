@@ -39,8 +39,7 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
   }
 
   public api(): WorkerApi<Methods> {
-    if (!this.module.isInitialized())
-      throw new Error('Not initialized, run init().');
+    if (!this.module.isInitialized()) throw new Error('Not initialized, run init().');
     const api: Partial<WorkerApi<Methods>> = {};
     for (const method of this.module.methods()) (api as any)[method] = this.fn(method);
     return api as WorkerApi<Methods>;

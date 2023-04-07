@@ -47,7 +47,11 @@ export const bufferSet: WorkerFn<{arr: Uint8Array; pos: number; octet: number}, 
   return arr;
 };
 
-export const bufferSetTransfer: WorkerFn<{arr: Uint8Array; pos: number; octet: number}, Uint8Array> = ({arr, pos, octet}) => {
+export const bufferSetTransfer: WorkerFn<{arr: Uint8Array; pos: number; octet: number}, Uint8Array> = ({
+  arr,
+  pos,
+  octet,
+}) => {
   arr[pos] = octet;
   return msg(arr, [arr.buffer]);
 };

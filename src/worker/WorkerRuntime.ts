@@ -17,7 +17,7 @@ import type {
 import type {WorkerFn, WorkerCh, WorkerMethodsMap} from './types';
 
 export class WorkerRuntime {
-  protected readonly methods: Map<number, (WorkerFn | WorkerCh)> = new Map();
+  protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
 
   private readonly onmessage = (msg: WpMessage) => {
@@ -99,14 +99,12 @@ export class WorkerRuntime {
   protected async importModule(specifier: string): Promise<WorkerMethodsMap> {
     try {
       const module = await import(specifier);
-      if (module && typeof module === 'object')
-        return module as WorkerMethodsMap;
+      if (module && typeof module === 'object') return module as WorkerMethodsMap;
     } catch {}
     const url = pathToFileURL(specifier).href;
     const loader = new Function('url', 'return import(url)');
     const module = await loader(url);
-    if (module && typeof module === 'object')
-      return module as WorkerMethodsMap;
+    if (module && typeof module === 'object') return module as WorkerMethodsMap;
     throw new Error('INVALID_MODULE');
   }
 
