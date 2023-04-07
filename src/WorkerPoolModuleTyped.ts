@@ -6,6 +6,11 @@ import type {WorkerPoolChannel} from './WorkerPoolChannel';
 export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WorkerPoolModule) {}
 
+  public async init(): Promise<this> {
+    await this.module.init();
+    return this;
+  }
+
   public ch<K extends keyof Methods>(
     method: K,
     req: Methods[K] extends WorkerMethod<infer Request, any> ? Request : never,
@@ -26,27 +31,24 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
   }
 
   public fn<K extends keyof Methods>(method: K) {
+    type Req = Methods[K] extends WorkerMethod<infer Request, any> ? Request : never;
     type Res = Methods[K] extends WorkerMethod<any, infer R> ? R : never;
     type Chan = Methods[K] extends WorkerCh<any, infer I, infer O, any> ? [I, O] : never;
-    return this.module.fn<Res, Chan[0], Chan[1]>(method as string);
+    return this.module.fn<Req, Res, Chan[0], Chan[1]>(method as string);
   }
 
-  public async init(): Promise<this> {
-    await this.module.init();
-    return this;
-  }
-
-  public api(): WorkerMethods<Methods> {
-    if (!this.module.isInitialized()) throw new Error('Module not initialized, run init() first.');
-    const api: Partial<WorkerMethods<Methods>> = {};
+  public api(): WorkerApi<Methods> {
+    if (!this.module.isInitialized())
+      throw new Error('Not initialized, run init().');
+    const api: Partial<WorkerApi<Methods>> = {};
     for (const method of this.module.methods()) (api as any)[method] = this.fn(method);
-    return api as WorkerMethods<Methods>;
+    return api as WorkerApi<Methods>;
   }
 }
 
 type Fn<Req, In, Out, Res> = (req: Req, transferList?: TransferList) => WorkerPoolChannel<Res, In, Out>;
 
-type WorkerMethods<T> = {
+type WorkerApi<T> = {
   [K in keyof T]: T[K] extends WorkerFn<infer Req, infer Res>
     ? Fn<Req, void, void, Res>
     : T[K] extends WorkerCh<infer Req, infer Res, infer Out, infer In>

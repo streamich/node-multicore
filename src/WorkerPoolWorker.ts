@@ -127,10 +127,16 @@ export class WorkerPoolWorker {
   public lastMethodId: number = 0;
 
   public ch(id: number, req: unknown, transferList: TransferList | undefined): WorkerPoolChannel {
-    this.lastMethodId = id;
+    const channel = new WorkerPoolChannel(id);
+    this.attachChannel(req, transferList, channel);
+    return channel;
+  }
+
+  public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WorkerPoolChannel): void {
+    const id = this.lastMethodId = channel.methodId;
     const seq = this.seq++;
-    const channel = new WorkerPoolChannel(seq, this);
     const channels = this.channels;
+    channel.onsend = (data, transferList) => this.sendChannelData(seq, data, transferList);
     try {
       if (!channels.size) {
         this.worker.on('message', this.onmessage);
@@ -138,7 +144,6 @@ export class WorkerPoolWorker {
       }
       channels.set(seq, channel);
       this.sendRequest(seq, id, req, transferList);
-      return channel;
     } catch (error) {
       channels.delete(seq);
       if (!channels.size) {
@@ -146,7 +151,6 @@ export class WorkerPoolWorker {
         this.worker.unref();
       }
       channel.onError(error);
-      return channel;
     }
   }
 

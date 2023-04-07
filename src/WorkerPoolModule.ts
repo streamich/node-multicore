@@ -1,9 +1,10 @@
+import {go} from 'thingies';
 import {WorkerPoolModuleTyped} from './WorkerPoolModuleTyped';
 import {WorkerPoolModuleWorkerSet} from './WorkerPoolModuleWorkerSet';
+import {WorkerPoolChannel} from './WorkerPoolChannel';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
 import type {WorkerPoolWorker} from './WorkerPoolWorker';
-import type {WorkerPoolChannel} from './WorkerPoolChannel';
 import type {TransferList} from './types';
 
 let id = 0;
@@ -73,13 +74,22 @@ export class WorkerPoolModule {
     return (await this.ch<R>(method, req as any, transferList)).promise;
   }
 
-  public async fn<Res = unknown, In = unknown, Out = unknown>(method: string) {
+  public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
     const id = this.methodId(method as string);
-    return async (req: unknown, transferList?: TransferList | undefined): Promise<WorkerPoolChannel<Res, In, Out>> => {
+    return (req: Req, transferList?: TransferList | undefined): WorkerPoolChannel<Res, In, Out> => {
+      const channel = new WorkerPoolChannel<Res, In, Out>(id);
       const workers = this.workers;
-      const worker = workers.worker() || await workers.worker$();
-      workers.maybeGrow(worker, id);
-      const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
+      const worker = workers.worker();
+      if (worker) {
+        workers.maybeGrow(worker, id);
+        worker.attachChannel(req, transferList, channel as WorkerPoolChannel<unknown, unknown, unknown>);
+        return channel;
+      }
+      go(async () => {
+        const worker = await workers.worker$();
+        workers.maybeGrow(worker, id);
+        worker.attachChannel(req, transferList, channel as WorkerPoolChannel<unknown, unknown, unknown>);
+      });
       return channel;
     };
   }
