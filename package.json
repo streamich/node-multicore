@@ -37,7 +37,7 @@
     "build:all": "concurrently \"yarn build:cjs\" \"yarn build:es6\" \"yarn build:es2020\" \"yarn build:esm\"",
     "build": "yarn build:es2020",
     "test:all": "yarn lint && yarn test && yarn demo",
-    "jest": "MC_MAX_THREADPOOL_SIZE=3 node -r ts-node/register ./node_modules/.bin/jest",
+    "jest": "node -r ts-node/register ./node_modules/.bin/jest",
     "test": "yarn jest --maxWorkers 7",
     "test:ci": "yarn jest --maxWorkers 3 --no-cache",
     "demo": "node -r ts-node/register src/demo/demo.ts"
@@ -55,9 +55,11 @@
     "threads",
     "thread pool"
   ],
-  "peerDependencies": {},
+  "peerDependencies": {
+    "tslib": "*"
+  },
   "dependencies": {
-    "thingies": "^1.7.0"
+    "thingies": "^1.10.1"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.2",

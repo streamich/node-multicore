@@ -2278,10 +2278,10 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
-thingies@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/thingies/-/thingies-1.7.0.tgz#d3cb028872a6a12354f2a345e30060f35ddd68c2"
-  integrity sha512-5GyP1+7A+i+RKQhzPSK5I2Je3x7+n3QnI6czH2qgCQW85gdhcnuBJ0Pp+SyMdV+InQU8ZQ+MRwkLvkv/8DuJpw==
+thingies@^1.10.1:
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/thingies/-/thingies-1.10.1.tgz#c1026d58d38aac4991eaeeebf044bcfb42eefa5a"
+  integrity sha512-6vYKPcoDSpqraelHk62MPnhUse7CBg4dDkN9102L6ziMShsWhs79CVUp4DRq912NJ3YRxnkcKhfmM0rR8BbuRA==
 
 tinybench@^2.4.0:
   version "2.4.0"

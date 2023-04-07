@@ -5,7 +5,7 @@ export {msg} from './worker/WorkerResponse';
 export {taker} from './worker/util';
 
 // Main thread.
-export {getSharedPool} from './singleton';
+export {pool} from './singleton';
 export type {TransferList} from './types';
 export type {WorkerPoolChannel} from './WorkerPoolChannel';
 export {WorkerPool} from './WorkerPool';

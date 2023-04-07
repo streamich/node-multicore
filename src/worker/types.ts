@@ -1,10 +1,6 @@
 import type {WorkerResponse} from './WorkerResponse';
 import type {WpSend, WpRecv} from '../types';
 
-export interface WorkerModule {
-  external: WorkerMethodsMap;
-}
-
 export type WorkerMethodsMap = Readonly<{[key: string]: WorkerMethod<any, any, any, any>}>;
 
 export type WorkerMethod<Req = unknown, Res = unknown, In = unknown, Out = unknown> =

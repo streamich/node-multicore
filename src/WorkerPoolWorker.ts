@@ -1,5 +1,5 @@
 import {resolve} from 'path';
-import {Worker} from 'worker_threads';
+import {Worker, type WorkerOptions} from 'worker_threads';
 import {WorkerPoolChannel} from './WorkerPoolChannel';
 import type {
   TransferList,
@@ -10,14 +10,28 @@ import type {
   WpMsgLoaded,
   WpMsgChannel,
 } from './types';
-import type {WorkerPoolModule} from './WorkerPoolModule';
+import type {WorkerPool} from './WorkerPool';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
+export interface WorkerPoolWorkerOptions {
+  pool: WorkerPool;
+  onExit: () => void;
+}
+
 export class WorkerPoolWorker {
-  private worker: Worker = new Worker(fileName);
+  private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
+
+  constructor(protected readonly options: WorkerPoolWorkerOptions) {
+    const {pool} = options;
+    const workerOptions: WorkerOptions & {name: string} = {
+      trackUnmanagedFds: pool.options.trackUnmanagedFds,
+      name: pool.options.name,
+    };
+    this.worker = new Worker(fileName, workerOptions);
+  }
 
   public tasks(): number {
     return this.channels.size;
@@ -25,6 +39,11 @@ export class WorkerPoolWorker {
 
   public async init(): Promise<void> {
     const worker = this.worker;
+    worker.once('exit', () => {
+      worker.removeAllListeners();
+      worker.unref();
+      this.options.onExit();
+    });
     await new Promise<void>((resolve) => worker.once('message', resolve));
     worker.unref();
   }
@@ -33,27 +52,34 @@ export class WorkerPoolWorker {
    * Load a module in this worker.
    * @param module Module to load.
    */
-  public async initModule(module: WorkerPoolModule): Promise<string[]> {
+  public async loadModule(id: number, specifier: string): Promise<string[]> {
     const worker = this.worker;
-    const id = module.id;
     const msg: WpMsgLoad = {
       type: 'load',
       id,
-      specifier: module.specifier,
+      specifier,
     };
     this.send(msg, undefined);
-    const external = await new Promise<string[]>((resolve) => {
+    const methods = await new Promise<string[]>((resolve) => {
       const onmessage = (msg: unknown) => {
-        if (msg && typeof msg === 'object' && (msg as WpMsgLoaded).type === 'loaded' && (msg as WpMsgLoaded).id === id) {
+        if (
+          msg &&
+          typeof msg === 'object' &&
+          (msg as WpMsgLoaded).type === 'loaded' &&
+          (msg as WpMsgLoaded).id === id
+        ) {
           worker.off('message', onmessage);
-          module.onLoaded(msg as WpMsgLoaded);
           resolve((msg as WpMsgLoaded).methods);
         }
       };
       worker.on('message', onmessage);
     });
     if (!this.channels.size) worker.unref();
-    return external;
+    return methods;
+  }
+
+  public async unloadModule(id: number): Promise<void> {
+    throw new Error('Not implemented');
   }
 
   private onmessage = (msg: WpMsgResponse | WpMsgError | WpMsgChannel): void => {
@@ -98,10 +124,19 @@ export class WorkerPoolWorker {
     this.worker.postMessage(msg, transferList);
   }
 
+  public lastMethodId: number = 0;
+
   public ch(id: number, req: unknown, transferList: TransferList | undefined): WorkerPoolChannel {
+    const channel = new WorkerPoolChannel(id);
+    this.attachChannel(req, transferList, channel);
+    return channel;
+  }
+
+  public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WorkerPoolChannel): void {
+    const id = (this.lastMethodId = channel.methodId);
     const seq = this.seq++;
-    const channel = new WorkerPoolChannel(seq, this);
     const channels = this.channels;
+    channel.onsend = (data, transferList) => this.sendChannelData(seq, data, transferList);
     try {
       if (!channels.size) {
         this.worker.on('message', this.onmessage);
@@ -109,7 +144,6 @@ export class WorkerPoolWorker {
       }
       channels.set(seq, channel);
       this.sendRequest(seq, id, req, transferList);
-      return channel;
     } catch (error) {
       channels.delete(seq);
       if (!channels.size) {
@@ -117,7 +151,6 @@ export class WorkerPoolWorker {
         this.worker.unref();
       }
       channel.onError(error);
-      return channel;
     }
   }
 

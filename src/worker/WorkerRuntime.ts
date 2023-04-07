@@ -14,10 +14,10 @@ import type {
   WpSend,
   WpRecv,
 } from '../types';
-import type {WorkerModule, WorkerFn, WorkerCh} from './types';
+import type {WorkerFn, WorkerCh, WorkerMethodsMap} from './types';
 
 export class WorkerRuntime {
-  protected readonly methods: Map<number, (WorkerFn | WorkerCh)> = new Map();
+  protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
 
   private readonly onmessage = (msg: WpMessage) => {
@@ -96,29 +96,26 @@ export class WorkerRuntime {
     }
   }
 
-  protected async importModule(specifier: string): Promise<WorkerModule> {
+  protected async importModule(specifier: string): Promise<WorkerMethodsMap> {
     try {
       const module = await import(specifier);
-      if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
-        return module as WorkerModule;
+      if (module && typeof module === 'object') return module as WorkerMethodsMap;
     } catch {}
     const url = pathToFileURL(specifier).href;
     const loader = new Function('url', 'return import(url)');
     const module = await loader(url);
-    if (module && typeof module === 'object' && (module as WorkerModule).external && typeof (module as WorkerModule).external === 'object')
-      return module as WorkerModule;
+    if (module && typeof module === 'object') return module as WorkerMethodsMap;
     throw new Error('INVALID_MODULE');
   }
 
   /** Load a module in this worker thread. */
   protected async onLoad({id, specifier}: WpMsgLoad) {
     const module = await this.importModule(specifier);
-    const {external} = module;
-    const methods = Object.keys(external).sort();
+    const methods = Object.keys(module).sort();
     const moduleWord = id << 16;
     for (let i = 0; i < methods.length; i++) {
       const key = methods[i];
-      const method = external[key];
+      const method = module[key];
       const methodResolved = method instanceof Promise ? await method : method;
       const fn: WorkerFn | WorkerCh = typeof methodResolved === 'function' ? methodResolved : () => methodResolved;
       this.methods.set(moduleWord | i, fn);

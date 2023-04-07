@@ -6,11 +6,3 @@ export const sleep: WorkerFn<number | void, number> = async (cycles?) => {
   while (i < cycles) i++;
   return i;
 };
-
-// These methods will be picked up by worker threads.
-export const external = {
-  sleep,
-};
-
-// This type will be used in the main thread.
-export type Methods = typeof external;
