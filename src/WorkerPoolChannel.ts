@@ -1,15 +1,19 @@
-import {Defer} from './util/Defer';
 import type {TransferList} from './types';
 
-export class WorkerPoolChannel<Res = unknown, In = unknown, Out = unknown> extends Defer<Res> {
+export class WorkerPoolChannel<Res = unknown, In = unknown, Out = unknown> {
   protected closed: boolean = false;
 
   public ondata?: (data: In) => void;
   public onsend?: (data: unknown, transferList?: TransferList) => void;
 
-  constructor(public readonly methodId: number) {
-    super();
-  }
+  public readonly resolve!: (data: Res) => void;
+  public readonly reject!: (error: any) => void;
+  public readonly result: Promise<Res> = new Promise<Res>((resolve, reject) => {
+    (this as any).resolve = resolve;
+    (this as any).reject = reject;
+  });
+
+  constructor(public readonly methodId: number) {}
 
   public onResponse(value: Res): void {
     this.closed = true;

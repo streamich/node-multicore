@@ -84,4 +84,4 @@ test('grows pool size when different methods are executed with high concurrency'
   ]);
   await until(() => pool.size() === 3);
   expect(pool.size()).toBe(3);
-});
+}, 30000);

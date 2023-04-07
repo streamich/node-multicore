@@ -71,7 +71,7 @@ export class WorkerPoolModule {
     req: unknown,
     transferList?: TransferList | undefined,
   ): Promise<R> {
-    return (await this.ch<R>(method, req as any, transferList)).promise;
+    return (await this.ch<R>(method, req as any, transferList)).result;
   }
 
   public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
