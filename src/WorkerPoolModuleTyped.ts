@@ -1,3 +1,4 @@
+import {WorkerPoolModulePinned} from './WorkerPoolModulePinned';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
@@ -43,6 +44,12 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
     const api: Partial<WorkerApi<Methods>> = {};
     for (const method of this.module.methods()) (api as any)[method] = this.fn(method);
     return api as WorkerApi<Methods>;
+  }
+
+  public pinned<Methods extends WorkerMethodsMap>(): WorkerPoolModulePinned<Methods> {
+    const worker = this.module.workers.worker();
+    if (!worker) throw new Error('NO_WORKER');
+    return new WorkerPoolModulePinned(this.module, worker);
   }
 }
 

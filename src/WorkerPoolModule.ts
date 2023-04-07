@@ -17,7 +17,7 @@ let id = 0;
 export class WorkerPoolModule {
   public readonly id: number = id++;
   protected readonly toId: Map<string, number> = new Map();
-  protected readonly workers: WorkerPoolModuleWorkerSet;
+  public readonly workers: WorkerPoolModuleWorkerSet;
 
   constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {
     this.workers = new WorkerPoolModuleWorkerSet(pool, this);
@@ -27,8 +27,9 @@ export class WorkerPoolModule {
     return !!this.workers.size();
   }
 
-  public async init(): Promise<void> {
+  public async init(): Promise<this> {
     await this.workers.init();
+    return this;
   }
 
   public async loadInWorker(worker: WorkerPoolWorker): Promise<void> {

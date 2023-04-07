@@ -35,7 +35,7 @@ const main = async () => {
 
   // Load another module.
   const tests = (await testsModule.init()).api();
-  // const testsPinned = tets.get(testsWorker.file)!.typed<testsWorker.Methods>().api(pool.worker());
+  const testsPinned = testsModule.pinned();
 
   ok((await math.add([1, 2]).result) === 3, 'can execute math.add');
   ok((await math.add([2, 6], []).result) === 8, 'can execute math.add with transfer list');
@@ -98,16 +98,16 @@ const main = async () => {
   deepEqual(err4, new Error('OMG!'), 'can asynchronously throw native error');
   console.log('✅', 'can asynchronously throw native error');
 
-  // ok((await testsPinned.get().promise) === undefined, 'can return "undefined" value');
-  // console.log('✅', 'can return "undefined" value');
+  ok((await testsPinned.ch('get', undefined).result) === undefined, 'can return "undefined" value');
+  console.log('✅', 'can return "undefined" value');
 
-  // await testsPinned.set('foo').promise;
-  // equal(await testsPinned.get().promise, 'foo', 'can set and get value in module closure');
-  // await testsPinned.set('foo 2').promise;
-  // ok((await testsPinned.get().promise) === 'foo 2', 'can set and get value in module closure');
-  // await testsPinned.set('foo 3').promise;
-  // ok((await testsPinned.get().promise) === 'foo 3', 'can set and get value in module closure');
-  // console.log('✅', 'can store state in module closure');
+  await testsPinned.ch('set', 'foo').result;
+  equal(await testsPinned.ch('get', undefined).result, 'foo', 'can set and get value in module closure');
+  await testsPinned.ch('set', 'foo 2').result;
+  ok((await testsPinned.ch('get', undefined).result) === 'foo 2', 'can set and get value in module closure');
+  await testsPinned.ch('set', 'foo 3').result;
+  ok((await testsPinned.ch('get', undefined).result) === 'foo 3', 'can set and get value in module closure');
+  console.log('✅', 'can store state in module closure');
 
   const buf = await tests.bufferSet({arr: new Uint8Array([1, 2, 3]), pos: 1, octet: 25}).result;
   deepEqual(buf, new Uint8Array([1, 25, 3]), 'can send and receive typed arrays');
