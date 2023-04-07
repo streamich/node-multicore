@@ -1,7 +1,7 @@
-import {Defer} from 'thingies';
+import {Defer, codeMutex} from 'thingies';
 import type {WorkerPool} from './WorkerPool';
 import type {WorkerPoolModule} from './WorkerPoolModule';
-import {WorkerPoolWorker} from './WorkerPoolWorker';
+import type {WorkerPoolWorker} from './WorkerPoolWorker';
 
 /**
  * Tracks worker thread set in which current modules has been loaded. This
@@ -32,16 +32,14 @@ export class WorkerPoolModuleWorkerSet {
     return;
   }
 
+  private mutex = codeMutex<WorkerPoolWorker>();
   protected addWorkerFromPool(): Promise<WorkerPoolWorker> {
-    if (!this.__addWorkerFromPoolMutex) this.__addWorkerFromPoolMutex = (async () => {
+    return this.mutex(async () => {
       const worker = this.pickNewWorkerFromPool() || await this.pool.worker$();
       await this.addWorker(worker);
-      this.__addWorkerFromPoolMutex = undefined;
       return worker;
-    })();
-    return this.__addWorkerFromPoolMutex;
+    });
   }
-  private __addWorkerFromPoolMutex: Promise<WorkerPoolWorker> | undefined;
 
   protected async addWorker(worker: WorkerPoolWorker): Promise<void> {
     const worker$ = new Defer<typeof worker>();
