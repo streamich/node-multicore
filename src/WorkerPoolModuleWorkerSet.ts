@@ -1,3 +1,4 @@
+import {Defer} from 'thingies';
 import type {WorkerPool} from './WorkerPool';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
@@ -11,6 +12,7 @@ import {WorkerPoolWorker} from './WorkerPoolWorker';
 export class WorkerPoolModuleWorkerSet {
   protected readonly workers1: Set<WorkerPoolWorker> = new Set();
   protected readonly workers2: WorkerPoolWorker[] = [];
+  protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
   protected nextWorker: number = 0;
 
   constructor (protected readonly pool: WorkerPool, protected readonly module: WorkerPoolModule) {}
@@ -30,18 +32,31 @@ export class WorkerPoolModuleWorkerSet {
     return;
   }
 
-  private __addWorker: Promise<WorkerPoolWorker> | undefined;
-
-  protected addWorker(): Promise<WorkerPoolWorker> {
-    if (!this.__addWorker) this.__addWorker = (async () => {
+  protected addWorkerFromPool(): Promise<WorkerPoolWorker> {
+    if (!this.__addWorkerFromPoolMutex) this.__addWorkerFromPoolMutex = (async () => {
       const worker = this.pickNewWorkerFromPool() || await this.pool.worker$();
+      await this.addWorker(worker);
+      this.__addWorkerFromPoolMutex = undefined;
+      return worker;
+    })();
+    return this.__addWorkerFromPoolMutex;
+  }
+  private __addWorkerFromPoolMutex: Promise<WorkerPoolWorker> | undefined;
+
+  protected async addWorker(worker: WorkerPoolWorker): Promise<void> {
+    const worker$ = new Defer<typeof worker>();
+    this.newWorkers.add(worker$.promise);
+    try {
       await this.module.loadInWorker(worker);
       this.workers1.add(worker);
       this.workers2.push(worker);
-      this.__addWorker = undefined;
-      return worker;
-    })();
-    return this.__addWorker
+      worker$.resolve(worker);
+    } catch (error) {
+      worker$.reject(error);
+      throw error;
+    } finally {
+      this.newWorkers.delete(worker$.promise);
+    }
   }
 
   public worker(): WorkerPoolWorker | undefined {
@@ -63,7 +78,7 @@ export class WorkerPoolModuleWorkerSet {
   public async worker$(): Promise<WorkerPoolWorker> {
     const worker = this.worker();
     if (worker) return worker;
-    return await this.addWorker();
+    return await this.addWorkerFromPool();
   }
 
   public maybeGrow(worker: WorkerPoolWorker, methodId: number): void {
@@ -71,8 +86,17 @@ export class WorkerPoolModuleWorkerSet {
     const workerIsTooBusy = activeWorkerTasks > 2;
     const stillWorkingOnTheSameTask = activeWorkerTasks > 0 && worker.lastMethodId === methodId;
     if (!workerIsTooBusy && !stillWorkingOnTheSameTask) return;
+    this.grow().catch(() => {});
+  }
+
+  public async grow(): Promise<WorkerPoolWorker | undefined> {
     const poolHasMoreWorkersToDraw = this.pool.size() > this.size();
-    if (poolHasMoreWorkersToDraw) this.addWorker().catch(() => {});
-    else this.pool.grow().catch(() => {});
+    if (poolHasMoreWorkersToDraw) return this.addWorkerFromPool();
+    else {
+      const worker = await this.pool.grow();
+      if (!worker) return;
+      await this.addWorker(worker);
+      return worker;
+    }
   }
 }
