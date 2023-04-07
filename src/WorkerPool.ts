@@ -1,4 +1,4 @@
-import {Defer, mutex} from 'thingies';
+import {Defer, go, mutex} from 'thingies';
 import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
@@ -9,7 +9,7 @@ export interface WorkerPoolOptions {
   max: number;
   /** Passed to worker threads, whether to close any unclosed file descriptors, defaults to false. */
   trackUnmanagedFds: boolean;
-  /** Worker pool name. Passed to worker threads, name used for debugging purposes. Defualts ot "multicore".*/
+  /** Worker pool name. Passed to worker threads, name used for debugging purposes. Defaults to "multicore".*/
   name: string;
 }
 
@@ -60,6 +60,8 @@ export class WorkerPool {
       onExit: () => {
         const index = this.workers.indexOf(worker);
         if (index >= 0) this.workers.splice(index, 1);
+        for (const module of this.modules.values()) module.removeWorker(worker);
+        if (this.size() < this.options.min) this.grow().catch(() => {});
       },
     });
     const worker$ = new Defer<WorkerPoolWorker>();

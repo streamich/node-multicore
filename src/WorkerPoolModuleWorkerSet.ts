@@ -61,20 +61,21 @@ export class WorkerPoolModuleWorkerSet {
     }
   }
 
+  public removeWorker(worker: WorkerPoolWorker): void {
+    const {workers1, workers2} = this;
+    workers1.delete(worker);
+    const index = workers2.indexOf(worker);
+    if (index >= 0) workers2.splice(index, 1);
+  }
+
   public worker(): WorkerPoolWorker | undefined {
     const {workers2} = this;
     const length = workers2.length;
     if (this.nextWorker >= length) this.nextWorker = 0;
     const worker = workers2[this.nextWorker];
     if (!worker) return;
-    if (worker.dead) {
-      this.workers1.delete(worker);
-      this.workers2.splice(this.nextWorker, 1);
-      return;
-    } else {
-      this.nextWorker = (this.nextWorker + 1) % length;
-      return worker;
-    }
+    this.nextWorker = (this.nextWorker + 1) % length;
+    return worker;
   }
 
   public async worker$(): Promise<WorkerPoolWorker> {

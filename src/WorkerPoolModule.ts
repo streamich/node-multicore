@@ -39,7 +39,6 @@ export class WorkerPoolModule {
   }
 
   public async unloadInWorker(worker: WorkerPoolWorker): Promise<void> {
-    if (worker.dead) return;
     await worker.unloadModule(this.id);
   }
 
@@ -96,5 +95,9 @@ export class WorkerPoolModule {
 
   public typed<Methods extends WorkerMethodsMap>(): WorkerPoolModuleTyped<Methods> {
     return new WorkerPoolModuleTyped(this);
+  }
+
+  public removeWorker(worker: WorkerPoolWorker): void {
+    this.workers.removeWorker(worker);
   }
 }
