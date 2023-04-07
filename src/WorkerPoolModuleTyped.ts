@@ -31,7 +31,13 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
     return this.module.fn<Res, Chan[0], Chan[1]>(method as string);
   }
 
+  public async init(): Promise<this> {
+    await this.module.init();
+    return this;
+  }
+
   public api(): WorkerMethods<Methods> {
+    if (!this.module.isInitialized()) throw new Error('Module not initialized, run init() first.');
     const api: Partial<WorkerMethods<Methods>> = {};
     for (const method of this.module.methods()) (api as any)[method] = this.fn(method);
     return api as WorkerMethods<Methods>;

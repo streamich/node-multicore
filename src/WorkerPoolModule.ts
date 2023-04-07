@@ -22,6 +22,14 @@ export class WorkerPoolModule {
     this.workers = new WorkerPoolModuleWorkerSet(pool, this);
   }
 
+  public isInitialized(): boolean {
+    return !!this.workers.size();
+  }
+
+  public async init(): Promise<void> {
+    await this.workers.init();
+  }
+
   public async loadInWorker(worker: WorkerPoolWorker): Promise<void> {
     const methods = await worker.loadModule(this.id, this.specifier);
     const moduleWord = this.id << 16;
