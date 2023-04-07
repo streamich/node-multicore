@@ -1,10 +1,7 @@
-import {type WorkerPool, getSharedPool} from '../..';
-import * as info from './info';
+import {pool} from '../..';
+import {resolve} from 'path';
+import type {Methods} from './module';
 
-export * from './info';
-
-export const init = async (pool?: WorkerPool) => {
-  if (!pool) pool = await getSharedPool();
-  const module = await pool.addModule(info.file);
-  return module.typed<info.Methods>();
-};
+export type {Methods};
+export const specifier = resolve(__dirname, 'module');
+export const module = pool.addModule(specifier).typed<Methods>();

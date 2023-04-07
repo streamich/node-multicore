@@ -1,6 +1,6 @@
-import {getSharedPool} from '..';
+import {pool} from '..';
 
 test('can shutdown the worker pool and exit', async () => {
-  const pool = await getSharedPool();
+  await pool.addWorker();
   await pool.shutdown();
 }, 30000);

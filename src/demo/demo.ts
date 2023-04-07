@@ -8,7 +8,7 @@
 //
 //     node -r ts-node/register src/demo/demo.ts
 
-import {WorkerPool, getSharedPool} from '..';
+import {WorkerPool, pool as defaultPool} from '..';
 import {ok, equal, deepEqual} from 'assert';
 import {of} from 'thingies/es2020';
 import * as mathWorker from './multicore-math';
@@ -25,7 +25,7 @@ const main = async () => {
   console.log();
 
   // Create a thread pool with at least one thread.
-  const pool = Math.random() > 0.5 ? await createPool() : await getSharedPool();
+  const pool = Math.random() > 0.5 ? await createPool() : defaultPool;
 
   // Load a module.
   const math = (await mathWorker.init(pool)).api();
