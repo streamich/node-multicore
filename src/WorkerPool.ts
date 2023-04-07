@@ -10,7 +10,10 @@ export interface WorkerPoolOptions {
   max: number;
   /** Passed to worker threads, whether to close any unclosed file descriptors, defaults to false. */
   trackUnmanagedFds: boolean;
-  /** Worker pool name. Passed to worker threads, name used for debugging purposes. Defaults to "multicore".*/
+  /**
+   * Worker pool name. Passed to worker threads, name used for debugging
+   * purposes. Defaults to "multicore".
+   */
   name: string;
 }
 
