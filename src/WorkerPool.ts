@@ -1,4 +1,4 @@
-import {Defer} from 'thingies';
+import {Defer, mutex} from 'thingies';
 import {WorkerPoolModule} from './WorkerPoolModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
@@ -77,6 +77,7 @@ export class WorkerPool {
     return worker;
   }
 
+  @mutex
   public async grow(): Promise<WorkerPoolWorker | undefined> {
     if (this.newWorkers.size > 0)
       return await this.newWorkers.values().next().value;

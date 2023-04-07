@@ -1,9 +1,7 @@
-import {Code, Defer, codeMutex} from 'thingies';
+import {Defer, mutex} from 'thingies';
 import type {WorkerPool} from './WorkerPool';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 import type {WorkerPoolWorker} from './WorkerPoolWorker';
-
-const mutex = <T>(fn: Code<T>, mut = codeMutex<T>()): Code<T> => async () => mut(fn);
 
 /**
  * Tracks worker thread set in which current modules has been loaded. This
@@ -40,11 +38,12 @@ export class WorkerPoolModuleWorkerSet {
     return;
   }
 
-  protected readonly addWorkerFromPool = mutex(async (): Promise<WorkerPoolWorker> => {
+  @mutex
+  protected async addWorkerFromPool(): Promise<WorkerPoolWorker> {
     const worker = this.pickNewWorkerFromPool() || await this.pool.worker$();
     await this.addWorker(worker);
     return worker;
-  });
+  }
 
   protected async addWorker(worker: WorkerPoolWorker): Promise<void> {
     const worker$ = new Defer<typeof worker>();
@@ -92,7 +91,8 @@ export class WorkerPoolModuleWorkerSet {
     this.grow().catch(() => {});
   }
 
-  public readonly grow = mutex(async (): Promise<WorkerPoolWorker | undefined> => {
+  @mutex
+  public async grow(): Promise<WorkerPoolWorker | undefined> {
     const poolHasMoreWorkersToDraw = this.pool.size() > this.size();
     if (poolHasMoreWorkersToDraw) return this.addWorkerFromPool();
     else {
@@ -101,5 +101,5 @@ export class WorkerPoolModuleWorkerSet {
       await this.addWorker(worker);
       return worker;
     }
-  });
+  }
 }

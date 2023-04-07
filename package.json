@@ -55,9 +55,11 @@
     "threads",
     "thread pool"
   ],
-  "peerDependencies": {},
+  "peerDependencies": {
+    "tslib": "*"
+  },
   "dependencies": {
-    "thingies": "^1.9.0"
+    "thingies": "^1.10.1"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.2",
