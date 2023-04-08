@@ -62,7 +62,7 @@ export class WpModule {
     const channel = this.pool.channelAllocator.alloc() as WpChannel<Res, In, Out>;
     try {
       if (worker) {
-        const id = this.methodId(method as string);
+        const id = this.toId.get(method)!;
         workers.maybeGrow(worker, id);
         channel.methodId = id;
         worker.attachChannel(req, transferList, channel as WpChannel);
@@ -70,7 +70,7 @@ export class WpModule {
         go(async () => {
           try {
             const worker = await workers.worker$();
-            const id = this.methodId(method as string);
+            const id = this.toId.get(method)!;
             workers.maybeGrow(worker, id);
             channel.methodId = id;
             worker.attachChannel(req, transferList, channel as WpChannel);
