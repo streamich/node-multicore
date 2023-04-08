@@ -25,7 +25,7 @@ export class WorkerModuleStatic implements WorkerModule {
     throw new Error('INVALID_MODULE');
   }
 
-  public table() {
+  public table(): ModuleTableEntry[] {
     const table: ModuleTableEntry[] = [];
     const sorted = Object.keys(this.methods).sort();
     const moduleWord = this.id << 16;
@@ -36,7 +36,10 @@ export class WorkerModuleStatic implements WorkerModule {
         typeof method === 'function'
         ? method as WorkerFn | WorkerCh
         : method instanceof Promise
-          ? async (...args: any[]) => await (await method)(...args)
+          ? async (...args: any[]) => {
+            const awaited = await method;
+            return typeof awaited === 'function' ? awaited(...args) : awaited;
+          }
           : () => method;
       table.push([key, moduleWord | i, fn])
     }
@@ -45,6 +48,8 @@ export class WorkerModuleStatic implements WorkerModule {
 
   public async unload(): Promise<void> {
     this.methods = {};
-    // TODO: clean from require.cache
+    const specifier = this.specifier;
+    const name = require.resolve(specifier);
+    delete require.cache[name];
   }
 }
