@@ -11,7 +11,7 @@ export class WpChannel<Res = unknown, In = unknown, Out = unknown> {
     (this as any).reject = reject;
   });
 
-  constructor(public readonly methodId: number) {}
+  constructor(public methodId: number) {}
 
   public onData(data: In): void {
     if (this.ondata) this.ondata(data);

@@ -101,6 +101,17 @@ export class WpModule {
     };
   }
 
+  public api<T extends Record<string, (...args: any[]) => WpChannel>>(): T {
+    const api = {} as T;
+    const handler: ProxyHandler<T> = {
+      get: (target, method: string) => {
+        return (req: any, transferList: any) => this.ch(method, req, transferList);
+      },
+    };
+    const proxy = new Proxy(api, handler);
+    return proxy;
+  }
+
   public typed<Methods extends WorkerMethodsMap>(): WpModuleTyped<Methods> {
     return new WpModuleTyped(this);
   }

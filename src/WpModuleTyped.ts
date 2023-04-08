@@ -12,6 +12,7 @@ export class WpModuleTyped<Methods extends WorkerMethodsMap> {
     return this;
   }
 
+  /** @todo Make it an arrow function. */
   public ch<K extends keyof Methods>(
     method: K,
     req: Methods[K] extends WorkerMethod<infer Request, any> ? Request : never,
@@ -39,12 +40,10 @@ export class WpModuleTyped<Methods extends WorkerMethodsMap> {
   }
 
   public api(): WorkerApi<Methods> {
-    if (!this.module.isInitialized()) throw new Error('Not initialized, run init().');
-    const api: Partial<WorkerApi<Methods>> = {};
-    for (const method of this.module.methods()) (api as any)[method] = this.fn(method);
-    return api as WorkerApi<Methods>;
+    return this.module.api() as WorkerApi<Methods>;
   }
 
+  /** Returns API of this module, which is pinned to one worker. */
   public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
     const worker = this.module.workers.worker();
     if (!worker) throw new Error('NO_WORKER');
