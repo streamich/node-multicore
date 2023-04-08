@@ -103,9 +103,19 @@ export class WpModule {
 
   public api<T extends Record<string, (...args: any[]) => WpChannel>>(): T {
     const api = {} as T;
+    const methodTableIsKnown = !!this.toId.size;
+    if (methodTableIsKnown) {
+      for (const key of this.toId.keys()) (api as any)[key] = this.fn(key);
+      return api;
+    }
     const handler: ProxyHandler<T> = {
       get: (target, method: string) => {
-        return (req: any, transferList: any) => this.ch(method, req, transferList);
+        const methodTableIsKnown = !!this.toId.size;
+        if (methodTableIsKnown) {
+          for (const key of this.toId.keys()) (api as any)[key] = this.fn(key);
+          delete handler.get;
+        }
+        return (req: unknown, transferList: TransferList) => this.ch(method, req, transferList);
       },
     };
     const proxy = new Proxy(api, handler);
