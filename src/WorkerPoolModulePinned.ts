@@ -1,4 +1,4 @@
-import type {WorkerPoolModule} from './WorkerPoolModule';
+import type {WpModule} from './WpModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerMethod, WorkerMethodsMap} from './worker/types';
 import type {WpChannel} from './WpChannel';
@@ -6,7 +6,7 @@ import type {WorkerPoolWorker} from './WorkerPoolWorker';
 
 /** Module pinned to a single worker. */
 export class WorkerPoolModulePinned<Methods extends WorkerMethodsMap> {
-  constructor(protected readonly module: WorkerPoolModule, protected readonly worker: WorkerPoolWorker) {}
+  constructor(protected readonly module: WpModule, protected readonly worker: WorkerPoolWorker) {}
 
   public ch<K extends keyof Methods>(
     method: K,

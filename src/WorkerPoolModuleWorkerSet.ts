@@ -1,6 +1,6 @@
 import {Defer, mutex} from 'thingies';
 import type {WorkerPool} from './WorkerPool';
-import type {WorkerPoolModule} from './WorkerPoolModule';
+import type {WpModule} from './WpModule';
 import type {WorkerPoolWorker} from './WorkerPoolWorker';
 
 /**
@@ -15,7 +15,7 @@ export class WorkerPoolModuleWorkerSet {
   protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
   protected nextWorker: number = 0;
 
-  constructor(protected readonly pool: WorkerPool, protected readonly module: WorkerPoolModule) {}
+  constructor(protected readonly pool: WorkerPool, protected readonly module: WpModule) {}
 
   public size(): number {
     return this.workers2.length;

@@ -1,11 +1,11 @@
 import {WorkerPoolModulePinned} from './WorkerPoolModulePinned';
-import type {WorkerPoolModule} from './WorkerPoolModule';
+import type {WpModule} from './WpModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
 import type {WpChannel} from './WpChannel';
 
 export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
-  constructor(protected readonly module: WorkerPoolModule) {}
+  constructor(protected readonly module: WpModule) {}
 
   public async init(): Promise<this> {
     await this.module.init();

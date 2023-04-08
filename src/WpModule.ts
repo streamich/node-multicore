@@ -10,11 +10,11 @@ import type {TransferList} from './types';
 let id = 0;
 
 /**
- * {@link WorkerPoolModule} represents a module loaded in a {@link WorkerPool}.
+ * {@link WpModule} represents a module loaded in a {@link WorkerPool}.
  * Each module is loaded in all worker threads. Then any method exported on the
  * `.methods` export of that module can be called in any thread.
  */
-export class WorkerPoolModule {
+export class WpModule {
   public readonly id: number = id++;
   protected readonly toId: Map<string, number> = new Map();
   public readonly workers: WorkerPoolModuleWorkerSet;

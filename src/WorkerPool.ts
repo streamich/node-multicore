@@ -1,6 +1,6 @@
 import {cpus} from 'os';
 import {Defer, mutex} from 'thingies';
-import {WorkerPoolModule} from './WorkerPoolModule';
+import {WpModule} from './WpModule';
 import {WorkerPoolWorker} from './WorkerPoolWorker';
 
 export interface WorkerPoolOptions {
@@ -22,7 +22,7 @@ export class WorkerPool {
   protected nextWorker: number = 0;
   protected readonly workers: WorkerPoolWorker[] = [];
   protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
-  public modules: Map<string, WorkerPoolModule> = new Map();
+  public modules: Map<string, WpModule> = new Map();
 
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
@@ -93,10 +93,10 @@ export class WorkerPool {
    *
    * @param specifier Path to the worker module file.
    */
-  public addModule(specifier: string): WorkerPoolModule {
+  public addModule(specifier: string): WpModule {
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
-    const module = new WorkerPoolModule(this, specifier);
+    const module = new WpModule(this, specifier);
     this.modules.set(specifier, module);
     return module;
   }
