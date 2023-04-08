@@ -29,8 +29,10 @@ export class WpWorker {
   constructor(protected readonly options: WorkerPoolWorkerOptions) {
     const {pool} = options;
     const workerOptions: WorkerOptions & {name: string} = {
-      trackUnmanagedFds: pool.options.trackUnmanagedFds,
       name: pool.options.name,
+      env: pool.options.env,
+      trackUnmanagedFds: pool.options.trackUnmanagedFds,
+      resourceLimits: pool.options.resourceLimits,
     };
     this.worker = new Worker(fileName, workerOptions);
   }
