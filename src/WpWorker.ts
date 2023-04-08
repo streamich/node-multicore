@@ -1,6 +1,6 @@
 import {resolve} from 'path';
 import {Worker, type WorkerOptions} from 'worker_threads';
-import {WorkerPoolChannel} from './WorkerPoolChannel';
+import {WpChannel} from './WpChannel';
 import type {
   TransferList,
   WpMsgError,
@@ -19,10 +19,10 @@ export interface WorkerPoolWorkerOptions {
   onExit: () => void;
 }
 
-export class WorkerPoolWorker {
+export class WpWorker {
   private worker: Worker;
   protected seq: number = 0;
-  protected readonly channels: Map<number, WorkerPoolChannel> = new Map();
+  protected readonly channels: Map<number, WpChannel> = new Map();
 
   constructor(protected readonly options: WorkerPoolWorkerOptions) {
     const {pool} = options;
@@ -126,13 +126,13 @@ export class WorkerPoolWorker {
 
   public lastMethodId: number = 0;
 
-  public ch(id: number, req: unknown, transferList: TransferList | undefined): WorkerPoolChannel {
-    const channel = new WorkerPoolChannel(id);
+  public ch(id: number, req: unknown, transferList: TransferList | undefined): WpChannel {
+    const channel = new WpChannel(id);
     this.attachChannel(req, transferList, channel);
     return channel;
   }
 
-  public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WorkerPoolChannel): void {
+  public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WpChannel): void {
     const id = (this.lastMethodId = channel.methodId);
     const seq = this.seq++;
     const channels = this.channels;

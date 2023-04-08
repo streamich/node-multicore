@@ -1,7 +1,7 @@
 import {cpus} from 'os';
 import {Defer, mutex} from 'thingies';
-import {WorkerPoolModule} from './WorkerPoolModule';
-import {WorkerPoolWorker} from './WorkerPoolWorker';
+import {WpModule} from './WpModule';
+import {WpWorker} from './WpWorker';
 
 export interface WorkerPoolOptions {
   /** Minimum number of worker threads to maintain. */
@@ -20,9 +20,9 @@ export interface WorkerPoolOptions {
 export class WorkerPool {
   public readonly options: Readonly<WorkerPoolOptions>;
   protected nextWorker: number = 0;
-  protected readonly workers: WorkerPoolWorker[] = [];
-  protected readonly newWorkers: Set<Promise<WorkerPoolWorker>> = new Set();
-  public modules: Map<string, WorkerPoolModule> = new Map();
+  protected readonly workers: WpWorker[] = [];
+  protected readonly newWorkers: Set<Promise<WpWorker>> = new Set();
+  public modules: Map<string, WpModule> = new Map();
 
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
@@ -56,8 +56,8 @@ export class WorkerPool {
   /**
    * Spin up a new worker thread in this {@link WorkerPool}.
    */
-  public async addWorker(): Promise<WorkerPoolWorker> {
-    const worker = new WorkerPoolWorker({
+  public async addWorker(): Promise<WpWorker> {
+    const worker = new WpWorker({
       pool: this,
       onExit: () => {
         const index = this.workers.indexOf(worker);
@@ -66,7 +66,7 @@ export class WorkerPool {
         if (this.size() < this.options.min) this.grow().catch(() => {});
       },
     });
-    const worker$ = new Defer<WorkerPoolWorker>();
+    const worker$ = new Defer<WpWorker>();
     this.newWorkers.add(worker$.promise);
     try {
       await worker.init();
@@ -82,7 +82,7 @@ export class WorkerPool {
   }
 
   @mutex
-  public async grow(): Promise<WorkerPoolWorker | undefined> {
+  public async grow(): Promise<WpWorker | undefined> {
     if (this.newWorkers.size > 0) return await this.newWorkers.values().next().value;
     if (this.size() < this.options.max) return await this.addWorker();
     return undefined;
@@ -93,16 +93,16 @@ export class WorkerPool {
    *
    * @param specifier Path to the worker module file.
    */
-  public addModule(specifier: string): WorkerPoolModule {
+  public addModule(specifier: string): WpModule {
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
-    const module = new WorkerPoolModule(this, specifier);
+    const module = new WpModule(this, specifier);
     this.modules.set(specifier, module);
     return module;
   }
 
   /** Pick the next random worker from the pool. */
-  public worker(): WorkerPoolWorker | undefined {
+  public worker(): WpWorker | undefined {
     const worker = this.workers[this.nextWorker];
     if (!worker) return;
     this.nextWorker = (this.nextWorker + 1) % this.workers.length;
@@ -110,12 +110,12 @@ export class WorkerPool {
   }
 
   /** Pick the next random worker from the pool. */
-  public async worker$(): Promise<WorkerPoolWorker> {
+  public async worker$(): Promise<WpWorker> {
     return this.worker() || this.newWorkers.values().next().value || this.addWorker();
   }
 
   /** Returns list of workers in random order. */
-  public randomWorkers(): WorkerPoolWorker[] {
+  public randomWorkers(): WpWorker[] {
     const workers = this.workers;
     const length = workers.length;
     const randomIndex = Math.round(Math.random() * length);
