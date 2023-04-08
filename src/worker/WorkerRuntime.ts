@@ -18,8 +18,10 @@ import type {
 } from '../types';
 import type {WorkerFn, WorkerCh, WorkerModule} from './types';
 
+type Wrapper = (seq: number, data: unknown) => unknown;
+
 export class WorkerRuntime {
-  protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
+  protected readonly wrappers: Map<number, Wrapper> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
   protected readonly modules: Map<number, WorkerModule> = new Map();
 
@@ -45,10 +47,9 @@ export class WorkerRuntime {
   }
 
   protected onRequest([, seq, method, data]: WpMsgRequest): void {
-    const fn = this.methods.get(method);
-    if (!fn) return;
-    if (fn.length === 1) this.fn(seq, fn as WorkerFn, data);
-    else this.ch(seq, fn, data);
+    const wrapper = this.wrappers.get(method);
+    if (!wrapper) return;
+    wrapper(seq, data);
   }
 
   protected onChannel([, seq, data]: WpMsgChannelData): void {
@@ -56,7 +57,7 @@ export class WorkerRuntime {
     if (callback) callback(data);
   }
 
-  protected fn(seq: number, fn: WorkerFn, data: unknown): void {
+  protected fn(fn: WorkerFn, seq: number, data: unknown): void {
     try {
       const result = fn(data);
       if (result instanceof Promise) {
@@ -67,15 +68,14 @@ export class WorkerRuntime {
           .catch((error) => {
             this.sendError(seq, error);
           });
-      } else {
+      } else
         this.sendResponse(seq, result);
-      }
     } catch (error) {
       this.sendError(seq, error);
     }
   }
 
-  protected async ch(seq: number, ch: WorkerCh, data: unknown): Promise<void> {
+  protected async ch(ch: WorkerCh, seq: number, data: unknown): Promise<void> {
     let closed = false;
     try {
       const send: WpSend<unknown> = (data: unknown | WorkerResponse<unknown>) => {
@@ -110,7 +110,9 @@ export class WorkerRuntime {
       : new WorkerModuleFunction(id, def.text);
     await module.load();
     const table = module.table();
-    for (const [, id, fn] of table) this.methods.set(id, fn);
+    for (const [, id, fn] of table) this.wrappers.set(id, fn.length === 1
+        ? (seq, data) => this.fn(fn as WorkerFn, seq, data)
+        : (seq, data) => this.ch(fn as WorkerCh, seq, data));
     const response: WpMsgModuleLoaded = [MessageType.ModuleLoaded, id, table.map(([method]) => method)];
     this.port.postMessage(response);
   }
@@ -121,22 +123,13 @@ export class WorkerRuntime {
       transferList = response.transferList;
       response = response.data;
     }
-    try {
-      const msg: WpMsgResponse = [MessageType.Response, seq, response];
-      this.port.postMessage(msg, transferList);
-    } catch (error) {
-      this.sendError(seq, error);
-    }
+    const msg: WpMsgResponse = [MessageType.Response, seq, response];
+    this.port.postMessage(msg, transferList);
   }
 
   protected sendError(seq: number, error: unknown): void {
-    try {
-      const response: WpMsgError = [MessageType.Error, seq, error];
-      this.port.postMessage(response);
-    } catch {
-      const response: WpMsgError = [MessageType.Error, seq, 'PORT'];
-      this.port.postMessage(response);
-    }
+    const response: WpMsgError = [MessageType.Error, seq, error];
+    this.port.postMessage(response);
   }
 
   /** Notify main thread that this worker thead has loaded. */
