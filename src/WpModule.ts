@@ -78,7 +78,7 @@ export class WpModule {
   }
 
   public async exec<R = unknown>(method: string, req: unknown, transferList?: TransferList | undefined): Promise<R> {
-    return (await this.ch<R>(method, req as any, transferList)).result;
+    return this.ch<R>(method, req as any, transferList).result;
   }
 
   public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
