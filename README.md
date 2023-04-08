@@ -58,4 +58,63 @@ yarn demo
 ```
 
 The demo executes this [`work` function](demo/module.js) on a single core vs.
-multiple cores. The results are printed to the console.
+in the thread pool. The results are printed to the console.
+
+Sample output:
+
+```
+CPU = Apple M1, Cores = 8, Max threads = 7
+
+Running "On main thread" case (concurrency = 1) ...
+Result: OK
+Time: 10.446s
+
+Running "On main thread" case (concurrency = 10) ...
+Result: OK
+Time: 10.167s
+
+Running "In thread pool" case (concurrency = 1) ...
+Result: OK
+Time: 10.586s
+
+Running "In thread pool" case (concurrency = 2) ...
+Result: OK
+Time: 5.366s
+
+Running "In thread pool" case (concurrency = 3) ...
+Result: OK
+Time: 3.775s
+
+Running "In thread pool" case (concurrency = 4) ...
+Result: OK
+Time: 3.188s
+
+Running "In thread pool" case (concurrency = 5) ...
+Result: OK
+Time: 2.622s
+
+Running "In thread pool" case (concurrency = 6) ...
+Result: OK
+Time: 2.354s
+
+Running "In thread pool" case (concurrency = 7) ...
+Result: OK
+Time: 2.227s
+
+Running "In thread pool" case (concurrency = 10) ...
+Result: OK
+Time: 2.086s
+
+Running "In thread pool" case (concurrency = 25) ...
+Result: OK
+Time: 1.902s
+
+Running "In thread pool" case (concurrency = 100) ...
+Result: OK
+Time: 1.804s
+
+Running "In thread pool" case (concurrency = 500) ...
+Result: OK
+Time: 1.796s
+✨  Done in 59.66s.
+```

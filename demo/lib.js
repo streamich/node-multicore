@@ -1,25 +1,22 @@
 const {concurrency} = require('thingies');
 
-const concurrencyLimit = 25;
 const iterations = 10000;
 
-const limit = concurrency(concurrencyLimit);
-
-const run = async (work) => {
-  const limitedWork = () => limit(work);
+const run = async (work, concurrencyLimit) => {
+  const limit = concurrency(concurrencyLimit);
   let res = 0;
   const promises = [];
-  for (let i = 0; i < iterations; i++) promises.push(limitedWork());
+  for (let i = 0; i < iterations; i++) promises.push(limit(work));
   const results = await Promise.all(promises);
   res += results.reduce((a, b) => a + b, 0);
   return res;
 };
 
-exports.test = async (name, work) => {
+exports.test = async (name, work, concurrencyLimit = 25) => {
   console.log();
-  console.log(`Running "${name}" case ...`);
-  console.time(name);
-  const res = await run(work);
-  console.log('Result:', res);
-  console.timeEnd(name);
+  console.log(`Running "${name}" case (concurrency = ${concurrencyLimit}) ...`);
+  console.time('Time');
+  const res = await run(work, concurrencyLimit);
+  console.log('Result:', res === iterations * 499999500000 ? 'OK' : 'FAIL');
+  console.timeEnd('Time');
 };
