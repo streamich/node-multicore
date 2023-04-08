@@ -5,7 +5,7 @@ import {WpChannel} from './WpChannel';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
 import type {WpWorker} from './WpWorker';
-import type {TransferList} from './types';
+import type {TransferList, WpModuleDef} from './types';
 
 let id = 0;
 
@@ -19,7 +19,7 @@ export class WpModule {
   protected readonly toId: Map<string, number> = new Map();
   public readonly workers: WpModuleWorkerSet;
 
-  constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {
+  constructor(protected readonly pool: WorkerPool, public readonly definition: WpModuleDef) {
     this.workers = new WpModuleWorkerSet(pool, this);
   }
 
@@ -33,7 +33,7 @@ export class WpModule {
   }
 
   public async loadInWorker(worker: WpWorker): Promise<void> {
-    const methods = await worker.loadModule(this.id, this.specifier);
+    const methods = await worker.loadModule(this.id, this.definition);
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++) this.toId.set(methods[i], moduleWord | i);
   }

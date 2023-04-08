@@ -1,4 +1,3 @@
-import {pathToFileURL} from 'url';
 import {WorkerResponse} from './WorkerResponse';
 import type {MessagePort} from 'worker_threads';
 import type {
@@ -14,11 +13,14 @@ import type {
   WpSend,
   WpRecv,
 } from '../types';
-import type {WorkerFn, WorkerCh, WorkerMethodsMap} from './types';
+import type {WorkerFn, WorkerCh, WorkerModule} from './types';
+import {WorkerModuleStatic} from './WorkerModuleStatic';
+import {WorkerModuleFunction} from './WorkerModuleFunction';
 
 export class WorkerRuntime {
   protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
+  protected readonly modules: Map<number, WorkerModule> = new Map();
 
   private readonly onmessage = (msg: WpMessage) => {
     if (Array.isArray(msg)) {
@@ -96,34 +98,18 @@ export class WorkerRuntime {
     }
   }
 
-  protected async importModule(specifier: string): Promise<WorkerMethodsMap> {
-    try {
-      const module = await import(specifier);
-      if (module && typeof module === 'object') return module as WorkerMethodsMap;
-    } catch {}
-    const url = pathToFileURL(specifier).href;
-    const loader = new Function('url', 'return import(url)');
-    const module = await loader(url);
-    if (module && typeof module === 'object') return module as WorkerMethodsMap;
-    throw new Error('INVALID_MODULE');
-  }
-
   /** Load a module in this worker thread. */
-  protected async onLoad({id, specifier}: WpMsgLoad) {
-    const module = await this.importModule(specifier);
-    const methods = Object.keys(module).sort();
-    const moduleWord = id << 16;
-    for (let i = 0; i < methods.length; i++) {
-      const key = methods[i];
-      const method = module[key];
-      const methodResolved = method instanceof Promise ? await method : method;
-      const fn: WorkerFn | WorkerCh = typeof methodResolved === 'function' ? methodResolved : () => methodResolved;
-      this.methods.set(moduleWord | i, fn);
-    }
+  protected async onLoad({id, def}: WpMsgLoad) {
+    const module = def.type === 'static'
+      ? new WorkerModuleStatic(id, def.specifier)
+      : new WorkerModuleFunction(id, def.text);
+    await module.load();
+    const table = module.table();
+    for (const [, id, fn] of table) this.methods.set(id, fn);
     const response: WpMsgLoaded = {
       type: 'loaded',
       id,
-      methods,
+      methods: table.map(([method]) => method),
     };
     this.port.postMessage(response);
   }

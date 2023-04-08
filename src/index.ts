@@ -6,6 +6,7 @@ export {taker} from './worker/util';
 
 // Main thread.
 export {pool} from './singleton';
+export * from './static';
 export type {TransferList} from './types';
 export type {WpChannel as WorkerPoolChannel} from './WpChannel';
 export {WorkerPool} from './WorkerPool';
