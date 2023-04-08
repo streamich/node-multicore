@@ -1,6 +1,17 @@
 # Node Multicore
 
-Multicore programming for Node.js made simple.
+Multicore programming for Node.js made simple. Make any CommonJs or ESM module
+run in a thread pool.
+
+1. A shared thread pool, designed to be shared across all NPM packages. But
+   custom thread pools can be created as well.
+1. Dynamic thread pool. It starts from 0 threads and scales up to the number of
+   CPU cores as the load increases.
+1. Dynamically load (and potentially unload) modules in the thread pool. Module
+   concurrency is dynamic as well, initially a module is not loaded in the in
+   any thread, but as the load increases it will be loaded in increasingly more
+   threads.
+1. Dead threads are automatically removed from the pool.
 
 
 ## Usage
