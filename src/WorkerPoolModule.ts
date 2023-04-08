@@ -1,7 +1,7 @@
 import {go} from 'thingies';
 import {WorkerPoolModuleTyped} from './WorkerPoolModuleTyped';
 import {WorkerPoolModuleWorkerSet} from './WorkerPoolModuleWorkerSet';
-import {WorkerPoolChannel} from './WorkerPoolChannel';
+import {WpChannel} from './WpChannel';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
 import type {WorkerPoolWorker} from './WorkerPoolWorker';
@@ -56,12 +56,12 @@ export class WorkerPoolModule {
     method: string,
     req: unknown,
     transferList?: TransferList | undefined,
-  ): Promise<WorkerPoolChannel<Res, In, Out>> {
+  ): Promise<WpChannel<Res, In, Out>> {
     const workers = this.workers;
     const worker = workers.worker() || (await workers.worker$());
     const id = this.methodId(method as string);
     workers.maybeGrow(worker, id);
-    const channel = worker.ch(id, req, transferList) as WorkerPoolChannel<Res, In, Out>;
+    const channel = worker.ch(id, req, transferList) as WpChannel<Res, In, Out>;
     return channel;
   }
 
@@ -71,19 +71,19 @@ export class WorkerPoolModule {
 
   public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
     const id = this.methodId(method as string);
-    return (req: Req, transferList?: TransferList | undefined): WorkerPoolChannel<Res, In, Out> => {
-      const channel = new WorkerPoolChannel<Res, In, Out>(id);
+    return (req: Req, transferList?: TransferList | undefined): WpChannel<Res, In, Out> => {
+      const channel = new WpChannel<Res, In, Out>(id);
       const workers = this.workers;
       const worker = workers.worker();
       if (worker) {
         workers.maybeGrow(worker, id);
-        worker.attachChannel(req, transferList, channel as WorkerPoolChannel<unknown, unknown, unknown>);
+        worker.attachChannel(req, transferList, channel as WpChannel<unknown, unknown, unknown>);
         return channel;
       }
       go(async () => {
         const worker = await workers.worker$();
         workers.maybeGrow(worker, id);
-        worker.attachChannel(req, transferList, channel as WorkerPoolChannel<unknown, unknown, unknown>);
+        worker.attachChannel(req, transferList, channel as WpChannel<unknown, unknown, unknown>);
       });
       return channel;
     };

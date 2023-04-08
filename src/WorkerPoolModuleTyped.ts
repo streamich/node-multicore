@@ -2,7 +2,7 @@ import {WorkerPoolModulePinned} from './WorkerPoolModulePinned';
 import type {WorkerPoolModule} from './WorkerPoolModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
-import type {WorkerPoolChannel} from './WorkerPoolChannel';
+import type {WpChannel} from './WpChannel';
 
 export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WorkerPoolModule) {}
@@ -52,7 +52,7 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
   }
 }
 
-type Fn<Req, In, Out, Res> = (req: Req, transferList?: TransferList) => WorkerPoolChannel<Res, In, Out>;
+type Fn<Req, In, Out, Res> = (req: Req, transferList?: TransferList) => WpChannel<Res, In, Out>;
 
 type WorkerApi<T> = {
   [K in keyof T]: T[K] extends WorkerFn<infer Req, infer Res>

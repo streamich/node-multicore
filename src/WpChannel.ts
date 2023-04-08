@@ -1,6 +1,6 @@
 import type {TransferList} from './types';
 
-export class WorkerPoolChannel<Res = unknown, In = unknown, Out = unknown> {
+export class WpChannel<Res = unknown, In = unknown, Out = unknown> {
   protected closed: boolean = false;
 
   public ondata?: (data: In) => void;
