@@ -4,14 +4,16 @@ export class WpChannelAllocator {
   protected channels: WpChannel[] = [];
 
   public alloc(): WpChannel {
-    if (this.channels.length) return this.channels.pop()!;
+    const channels = this.channels;
+    if (channels.length) return channels.pop()!;
     return new WpChannel(0);
   }
 
   public free(channel: WpChannel<any, any, any>): void {
-    if (this.channels.length < 128) {
+    const channels = this.channels;
+    if (channels.length < 128) {
       channel.reset();
-      this.channels.push(channel);
+      channels.push(channel);
     }
   }
 }
