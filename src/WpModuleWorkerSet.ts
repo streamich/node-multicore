@@ -79,9 +79,7 @@ export class WpModuleWorkerSet {
   }
 
   public async worker$(): Promise<WpWorker> {
-    const worker = this.worker();
-    if (worker) return worker;
-    return await this.addWorkerFromPool();
+    return this.worker() || this.addWorkerFromPool();
   }
 
   public maybeGrow(worker: WpWorker, methodId: number): void {
