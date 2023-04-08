@@ -19,7 +19,7 @@ import {pool} from 'node-multicore';
 const filename = __dirname + '/module';
 type Methods = typeof import('./module');
 
-const module = pool.addModule(filename).typed<Methods>();
+const module = pool.module(filename).typed<Methods>();
 ```
 
 You can now call the exported functions from the module:

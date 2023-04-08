@@ -93,7 +93,7 @@ export class WorkerPool {
    *
    * @param specifier Path to the worker module file.
    */
-  public addModule(specifier: string): WpModule {
+  public module(specifier: string): WpModule {
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
     const module = new WpModule(this, specifier);

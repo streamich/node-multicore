@@ -31,7 +31,7 @@ exports.bootstrapThreadPool = async () => {
   console.log('CPU count:', cpus().length);
   console.log('Pool size:', pool.size());
 
-  const module = pool.addModule(__dirname + '/module.js');
+  const module = pool.module(__dirname + '/module.js');
   await module.init();
   while (module.workers.size() < pool.size()) await module.workers.grow();
   console.log('Module workers:', module.workers.size());
