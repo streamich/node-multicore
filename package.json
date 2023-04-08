@@ -36,9 +36,9 @@
     "build:all": "concurrently \"yarn build:cjs\" \"yarn build:es6\" \"yarn build:es2020\" \"yarn build:esm\"",
     "build": "yarn build:es2020",
     "test:all": "yarn lint && yarn test && yarn test:e2e",
-    "jest": "node -r ts-node/register ./node_modules/.bin/jest",
+    "jest": "node -r ts-node/register ./node_modules/.bin/jest --no-cache",
     "test": "yarn jest --maxWorkers 7",
-    "test:ci": "yarn jest --maxWorkers 3 --no-cache",
+    "test:ci": "yarn jest --maxWorkers 3",
     "test:e2e": "node -r ts-node/register src/demo/demo.ts",
     "demo": "yarn build && node demo"
   },
