@@ -21,6 +21,7 @@ import type {WorkerFn, WorkerCh, WorkerModule} from './types';
 type Wrapper = (seq: number, data: unknown) => unknown;
 
 const RESPONSE: WpMsgResponse = [MessageType.Response, 0, null];
+const CHANNEL: WpMsgChannelData = [MessageType.ChannelData, 0, null];
 
 export class WorkerRuntime {
   protected readonly wrappers: Map<number, Wrapper> = new Map();
@@ -87,8 +88,10 @@ export class WorkerRuntime {
           transferList = data.transferList;
           data = data.data;
         }
-        const msg: WpMsgChannelData = [MessageType.ChannelData, seq, data];
-        this.port.postMessage(msg, transferList);
+        CHANNEL[1] = seq;
+        CHANNEL[2] = data;
+        this.port.postMessage(CHANNEL, transferList);
+        CHANNEL[2] = null;
       };
       const recv: WpRecv<unknown> = (callback) => {
         if (closed) throw new Error('CH_CLOSED');
