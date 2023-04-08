@@ -20,6 +20,8 @@ import type {WorkerFn, WorkerCh, WorkerModule} from './types';
 
 type Wrapper = (seq: number, data: unknown) => unknown;
 
+const RESPONSE: WpMsgResponse = [MessageType.Response, 0, null];
+
 export class WorkerRuntime {
   protected readonly wrappers: Map<number, Wrapper> = new Map();
   protected readonly chs: Map<number, (data: unknown) => void> = new Map();
@@ -123,8 +125,10 @@ export class WorkerRuntime {
       transferList = response.transferList;
       response = response.data;
     }
-    const msg: WpMsgResponse = [MessageType.Response, seq, response];
-    this.port.postMessage(msg, transferList);
+    RESPONSE[1] = seq;
+    RESPONSE[2] = response;
+    this.port.postMessage(RESPONSE, transferList);
+    RESPONSE[2] = null;
   }
 
   protected sendError(seq: number, error: unknown): void {
