@@ -49,7 +49,7 @@ import {pool} from 'node-multicore';
 const path = resolve(__dirname, 'module');
 type Methods = typeof import('./module');
 
-const math = pool.module(path).typed<Method>();
+const math = pool.module(path).typed<Methods>();
 ```
 
 Now call your methods from the main thread
@@ -64,6 +64,9 @@ const result = await math.exec('add', [1, 2]); // 3
 - The thread pool
 - Modules
 - Channels
+- Anon functions
+- Pinning a thread
+- Creating multicore packages
 
 ### Loading a module
 
@@ -108,7 +111,7 @@ const result = await fn(1, 2); // 3
 ```
 
 
-## Demo/Benchmark
+## Demo / Benchmark
 
 Run a demo with the following commands:
 
