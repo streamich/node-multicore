@@ -160,12 +160,6 @@ export class WpWorker {
 
   public lastMethodId: number = 0;
 
-  public ch(id: number, req: unknown, transferList: TransferList | undefined): WpChannel {
-    const channel = new WpChannel(id);
-    this.attachChannel(req, transferList, channel);
-    return channel;
-  }
-
   public attachChannel(req: unknown, transferList: TransferList | undefined, channel: WpChannel): void {
     const id = (this.lastMethodId = channel.methodId);
     const seq = this.seq++;

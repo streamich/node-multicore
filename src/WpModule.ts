@@ -52,21 +52,36 @@ export class WpModule {
     return Array.from(this.toId.keys());
   }
 
-  public async ch<Res = unknown, In = unknown, Out = unknown>(
+  public ch<Res = unknown, In = unknown, Out = unknown>(
     method: string,
     req: unknown,
     transferList?: TransferList | undefined,
-  ): Promise<WpChannel<Res, In, Out>> {
+  ): WpChannel<Res, In, Out> {
     const workers = this.workers;
-    const worker = workers.worker() || (await workers.worker$());
-    const id = this.methodId(method as string);
-    workers.maybeGrow(worker, id);
-    const channel = worker.ch(id, req, transferList) as WpChannel<Res, In, Out>;
+    const worker = workers.worker();
+    const channel = this.pool.channelAllocator.alloc() as WpChannel<Res, In, Out>;
+    if (worker) {
+      const id = this.methodId(method as string);
+      workers.maybeGrow(worker, id);
+      channel.methodId = id;
+      worker.attachChannel(req, transferList, channel as WpChannel);
+    } else {
+      go(async () => {
+        const worker = await workers.worker$();
+        const id = this.methodId(method as string);
+        workers.maybeGrow(worker, id);
+        channel.methodId = id;
+        worker.attachChannel(req, transferList, channel as WpChannel);
+      });
+    }
     return channel;
   }
 
   public async exec<R = unknown>(method: string, req: unknown, transferList?: TransferList | undefined): Promise<R> {
-    return (await this.ch<R>(method, req as any, transferList)).result;
+    const channel = this.ch<R>(method, req as any, transferList);
+    const result = await channel.result;
+    this.pool.channelAllocator.free(channel);
+    return result;
   }
 
   public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
@@ -87,6 +102,27 @@ export class WpModule {
       });
       return channel;
     };
+  }
+
+  public api<T extends Record<string, (...args: any[]) => WpChannel>>(): T {
+    const api = {} as T;
+    const methodTableIsKnown = !!this.toId.size;
+    if (methodTableIsKnown) {
+      for (const key of this.toId.keys()) (api as any)[key] = this.fn(key);
+      return api;
+    }
+    const handler: ProxyHandler<T> = {
+      get: (target, method: string) => {
+        const methodTableIsKnown = !!this.toId.size;
+        if (methodTableIsKnown) {
+          for (const key of this.toId.keys()) (api as any)[key] = this.fn(key);
+          delete handler.get;
+        }
+        return (req: unknown, transferList: TransferList) => this.ch(method, req, transferList);
+      },
+    };
+    const proxy = new Proxy(api, handler);
+    return proxy;
   }
 
   public typed<Methods extends WorkerMethodsMap>(): WpModuleTyped<Methods> {

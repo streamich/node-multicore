@@ -6,6 +6,7 @@ import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 import {sha256} from './util/sha';
 import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
 import {WorkerCh, WorkerFn} from './worker/types';
+import {WpChannelAllocator} from './WpChannelAllocator';
 import type {WorkerOptions} from 'worker_threads';
 
 export interface WorkerPoolOptions {
@@ -32,6 +33,7 @@ export class WorkerPool {
   protected readonly workers: WpWorker[] = [];
   protected readonly newWorkers: Set<Promise<WpWorker>> = new Set();
   public modules: Map<string, WpModule> = new Map();
+  public channelAllocator = new WpChannelAllocator();
 
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
