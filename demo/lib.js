@@ -1,3 +1,5 @@
+'use strict';
+
 const {concurrency} = require('thingies');
 
 const iterations = 10000;
@@ -12,11 +14,20 @@ const run = async (work, concurrencyLimit) => {
   return res;
 };
 
+exports.warmup = async (work) => {
+  let res = 0;
+  for (let i = 0; i < 24; i++) {
+    const promises = [];
+    for (let i = 0; i < 24; i++) promises.push(work());
+    res += await Promise.all(promises);
+  }
+  return res;
+};
+
 exports.test = async (name, work, concurrencyLimit = 25) => {
-  console.log();
-  console.log(`Running "${name}" case (concurrency = ${concurrencyLimit}) ...`);
-  console.time('Time');
+  const timingName = `${name} (concurrency = ${concurrencyLimit})`;
+  console.time(timingName);
   const res = await run(work, concurrencyLimit);
-  console.log('Result:', res === iterations * 499999500000 ? 'OK' : 'FAIL');
-  console.timeEnd('Time');
+  if (res !== iterations * 499999500000) throw new Error('Invalid result');
+  console.timeEnd(timingName);
 };

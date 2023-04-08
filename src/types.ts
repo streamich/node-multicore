@@ -1,8 +1,8 @@
 import type {TransferListItem} from 'worker_threads';
-import type {WpModuleDefinitionFunc} from '../WpModuleDefinitionFunc';
-import type {WpModuleDefinitionStatic} from '../WpModuleDefinitionStatic';
+import type {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
+import type {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 
-export * from './messaging';
+export * from './message/types';
 
 export type TransferList = ReadonlyArray<TransferListItem>;
 

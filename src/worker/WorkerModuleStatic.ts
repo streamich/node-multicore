@@ -12,15 +12,16 @@ export class WorkerModuleStatic extends AbstractWorkerModule implements WorkerMo
   public async load(): Promise<void> {
     const specifier = this.specifier;
     try {
-      const module = await import(specifier);
+      const module = require(specifier);
       if (module && typeof module === 'object') {
         this.methods = module as WorkerMethodsMap;
         return;
       }
     } catch {}
     const url = pathToFileURL(specifier).href;
-    const loader = new Function('url', 'return import(url)');
-    const module = await loader(url);
+    // We wrap it into a synthetic function, so that compiler does not replace it by "require".
+    const dynamicImport = new Function('url', 'return import(url)');
+    const module = await dynamicImport(url);
     if (module && typeof module === 'object') {
       this.methods = module as WorkerMethodsMap;
       return;

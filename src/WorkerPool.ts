@@ -6,6 +6,7 @@ import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 import {sha256} from './util/sha';
 import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
 import {WorkerCh, WorkerFn} from './worker/types';
+import type {WorkerOptions} from 'worker_threads';
 
 export interface WorkerPoolOptions {
   /** Minimum number of worker threads to maintain. */
@@ -19,6 +20,10 @@ export interface WorkerPoolOptions {
    * purposes. Defaults to "multicore".
    */
   name: string;
+  /** Resource limits to set on each worker. */
+  resourceLimits?: WorkerOptions['resourceLimits'];
+  /** Environment variables to set in each worker. */
+  env?: WorkerOptions['env'];
 }
 
 export class WorkerPool {
@@ -31,7 +36,7 @@ export class WorkerPool {
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
       min: +(process.env.MC_MIN_THREAD_POOL_SIZE || '') || 0,
-      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || Math.max(1, Math.min(cpus().length - 1, 8)),
+      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || Math.max(1, Math.min(cpus().length - 1, 31)),
       trackUnmanagedFds: false,
       name: 'multicore',
       ...options,
