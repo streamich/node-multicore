@@ -148,8 +148,12 @@ export class WpWorker {
       worker.ref();
     }
     channels.set(seq, channel);
-    const msg: WpMsgRequest = [MessageType.Request, seq, id, req];
+    const msg = channel.request;
+    msg[1] = seq;
+    msg[2] = id;
+    msg[3] = req;
     worker.postMessage(msg, transferList);
+    msg[3] = null;
   }
 
   public async shutdown(): Promise<void> {

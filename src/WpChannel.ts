@@ -1,8 +1,10 @@
-import type {TransferList} from './types';
+import {MessageType} from './message/constants';
+import type {TransferList, WpMsgRequest} from './types';
 
 export class WpChannel<Res = unknown, In = unknown, Out = unknown> {
   public ondata?: (data: In) => void = undefined;
   public onsend?: (data: unknown, transferList?: TransferList) => void = undefined;
+  public request: WpMsgRequest = [MessageType.Request, 0, 0, null];
 
   public readonly resolve!: (data: Res) => void;
   public readonly reject!: (error: any) => void;
