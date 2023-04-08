@@ -1,5 +1,5 @@
 import {AbstractWorkerModule} from './AbstractWorkerModule';
-import type {WorkerMethodsMap, WorkerModule} from "./types";
+import type {WorkerMethodsMap, WorkerModule} from './types';
 
 export class WorkerModuleFunction extends AbstractWorkerModule implements WorkerModule {
   public methods: WorkerMethodsMap = {};
@@ -11,7 +11,7 @@ export class WorkerModuleFunction extends AbstractWorkerModule implements Worker
   public async load(): Promise<void> {
     // tslint:disable-next-line no-eval ban
     const fn = eval(`(${this.text})`);
-    this.methods = { default: fn };
+    this.methods = {default: fn};
   }
 
   public async unload(): Promise<void> {

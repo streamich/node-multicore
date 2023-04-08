@@ -71,8 +71,7 @@ export class WorkerRuntime {
           .catch((error) => {
             this.sendError(seq, error);
           });
-      } else
-        this.sendResponse(seq, result);
+      } else this.sendResponse(seq, result);
     } catch (error) {
       this.sendError(seq, error);
     }
@@ -110,14 +109,17 @@ export class WorkerRuntime {
 
   /** Load a module in this worker thread. */
   protected async onLoadModule([, id, def]: WpMsgLoadModule) {
-    const module = def.type === 'static'
-      ? new WorkerModuleStatic(id, def.specifier)
-      : new WorkerModuleFunction(id, def.text);
+    const module =
+      def.type === 'static' ? new WorkerModuleStatic(id, def.specifier) : new WorkerModuleFunction(id, def.text);
     await module.load();
     const table = module.table();
-    for (const [, id, fn] of table) this.wrappers.set(id, fn.length === 1
-        ? (seq, data) => this.fn(fn as WorkerFn, seq, data)
-        : (seq, data) => this.ch(fn as WorkerCh, seq, data));
+    for (const [, id, fn] of table)
+      this.wrappers.set(
+        id,
+        fn.length === 1
+          ? (seq, data) => this.fn(fn as WorkerFn, seq, data)
+          : (seq, data) => this.ch(fn as WorkerCh, seq, data),
+      );
     const response: WpMsgModuleLoaded = [MessageType.ModuleLoaded, id, table.map(([method]) => method)];
     this.port.postMessage(response);
   }

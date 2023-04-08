@@ -1,4 +1,4 @@
-import type {ModuleTableEntry, WorkerCh, WorkerFn, WorkerMethodsMap, WorkerModule} from "./types";
+import type {ModuleTableEntry, WorkerCh, WorkerFn, WorkerMethodsMap, WorkerModule} from './types';
 
 export abstract class AbstractWorkerModule implements WorkerModule {
   public abstract id: number;
@@ -16,14 +16,14 @@ export abstract class AbstractWorkerModule implements WorkerModule {
       const method = this.methods[key];
       const fn: WorkerFn | WorkerCh =
         typeof method === 'function'
-        ? method as WorkerFn | WorkerCh
-        : method instanceof Promise
+          ? (method as WorkerFn | WorkerCh)
+          : method instanceof Promise
           ? async (...args: any[]) => {
-            const awaited = await method;
-            return typeof awaited === 'function' ? awaited(...args) : awaited;
-          }
+              const awaited = await method;
+              return typeof awaited === 'function' ? awaited(...args) : awaited;
+            }
           : () => method;
-      table.push([key, moduleWord | i, fn])
+      table.push([key, moduleWord | i, fn]);
     }
     return table;
   }

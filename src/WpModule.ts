@@ -80,7 +80,7 @@ export class WpModule {
         });
       }
     } catch (err) {
-      channel.reject(err); 
+      channel.reject(err);
     }
     return channel;
   }

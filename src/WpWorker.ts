@@ -59,7 +59,9 @@ export class WpWorker {
    */
   public async loadModule(id: number, definition: WpModuleDef): Promise<string[]> {
     const worker = this.worker;
-    const msg: WpMsgLoadModule = [MessageType.LoadModule, id,
+    const msg: WpMsgLoadModule = [
+      MessageType.LoadModule,
+      id,
       definition instanceof WpModuleDefinitionStatic
         ? {type: 'static', specifier: definition.specifier}
         : {type: 'func', text: definition.text},

@@ -1,6 +1,6 @@
 import {pathToFileURL} from 'url';
 import {AbstractWorkerModule} from './AbstractWorkerModule';
-import type {WorkerMethodsMap, WorkerModule} from "./types";
+import type {WorkerMethodsMap, WorkerModule} from './types';
 
 export class WorkerModuleStatic extends AbstractWorkerModule implements WorkerModule {
   public methods: WorkerMethodsMap = {};

@@ -1,4 +1,4 @@
-import type {MessageType} from "./constants";
+import type {MessageType} from './constants';
 
 export type {MessageType};
 
@@ -13,7 +13,11 @@ export type WpMsgError<T = unknown> = [type: MessageType.Error, seq: number, dat
 export type WpMsgChannelData<T = unknown> = [type: MessageType.ChannelData, seq: number, data: T];
 
 export type WPMsgWorkerReady = [type: MessageType.WorkerReady];
-export type WpMsgLoadModule = [type: MessageType.LoadModule, id: number, def: WpMsgLoadDefinitionStatic | WpMsgLoadDefinitionFunc];
+export type WpMsgLoadModule = [
+  type: MessageType.LoadModule,
+  id: number,
+  def: WpMsgLoadDefinitionStatic | WpMsgLoadDefinitionFunc,
+];
 export type WpMsgModuleLoaded = [type: MessageType.ModuleLoaded, id: number, methods: string[]];
 
 export interface WpMsgLoadDefinitionStatic {
@@ -25,4 +29,3 @@ export interface WpMsgLoadDefinitionFunc {
   type: 'func';
   text: string;
 }
-

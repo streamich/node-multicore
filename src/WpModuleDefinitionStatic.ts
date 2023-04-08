@@ -1,3 +1,3 @@
 export class WpModuleDefinitionStatic {
-  constructor (public readonly specifier: string) {}
+  constructor(public readonly specifier: string) {}
 }
