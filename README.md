@@ -11,12 +11,15 @@ Create a module you want to be loaded in the thread pool, put it in a `module.ts
 export const add = ([a, b]) => a + b;
 ```
 
-Now add your module in the thread pool:
+Now add your module to the thread pool:
 
 ```ts
 import {pool} from 'node-multicore';
 
-const module = pool.addModule(__dirname + '/module');
+const filename = __dirname + '/module';
+type Methods = typeof import('./module');
+
+const module = pool.addModule(filename).typed<Methods>();
 ```
 
 You can now call the exported functions from the module:
