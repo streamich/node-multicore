@@ -19,3 +19,13 @@ export type WorkerCh<Req = unknown, Res = unknown, In = unknown, Out = unknown> 
 export type Response<R> = R | WorkerResponse<R>;
 
 export type MaybePromise<T> = T | Promise<T>;
+
+export interface WorkerModule {
+  id: number;
+  methods: WorkerMethodsMap;
+  table(): ModuleTableEntry[];
+  load(): Promise<void>;
+  unload(): Promise<void>;
+}
+
+export type ModuleTableEntry = [method: string, id: number, fn: WorkerFn | WorkerCh];
