@@ -7,8 +7,8 @@ Multicore programming for Node.js made simple.
 
 ### Loading a module
 
-This is the preferred and main way to use this library. It allows you to load a
-module in a separate thread and call its exported functions.
+This is the preferred way to use this library, it will load a module in the
+thread pool and you can call its exported functions.
 
 Create a module you want to be loaded in the thread pool, put it in a `module.ts` file:
 
