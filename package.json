@@ -69,6 +69,7 @@
     "concurrently": "^8.0.1",
     "jest": "^29.5.0",
     "markdown-it": "^13.0.1",
+    "piscina": "^3.2.0",
     "prettier": "^2.8.7",
     "rimraf": "^4.4.1",
     "tinybench": "^2.4.0",

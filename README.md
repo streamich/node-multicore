@@ -64,57 +64,29 @@ Sample output:
 
 ```
 CPU = Apple M1, Cores = 8, Max threads = 7
-
-Running "On main thread" case (concurrency = 1) ...
-Result: OK
-Time: 10.446s
-
-Running "On main thread" case (concurrency = 10) ...
-Result: OK
-Time: 10.167s
-
-Running "In thread pool" case (concurrency = 1) ...
-Result: OK
-Time: 10.586s
-
-Running "In thread pool" case (concurrency = 2) ...
-Result: OK
-Time: 5.366s
-
-Running "In thread pool" case (concurrency = 3) ...
-Result: OK
-Time: 3.775s
-
-Running "In thread pool" case (concurrency = 4) ...
-Result: OK
-Time: 3.188s
-
-Running "In thread pool" case (concurrency = 5) ...
-Result: OK
-Time: 2.622s
-
-Running "In thread pool" case (concurrency = 6) ...
-Result: OK
-Time: 2.354s
-
-Running "In thread pool" case (concurrency = 7) ...
-Result: OK
-Time: 2.227s
-
-Running "In thread pool" case (concurrency = 10) ...
-Result: OK
-Time: 2.086s
-
-Running "In thread pool" case (concurrency = 25) ...
-Result: OK
-Time: 1.902s
-
-Running "In thread pool" case (concurrency = 100) ...
-Result: OK
-Time: 1.804s
-
-Running "In thread pool" case (concurrency = 500) ...
-Result: OK
-Time: 1.796s
-✨  Done in 59.66s.
+On main thread (concurrency = 1): 10.360s
+On main thread (concurrency = 10): 10.163s
+Thread pool: multicore (concurrency = 1): 10.812s
+Thread pool: piscina (concurrency = 1): 11.082s
+Thread pool: multicore (concurrency = 2): 5.758s
+Thread pool: piscina (concurrency = 2): 5.714s
+Thread pool: multicore (concurrency = 3): 4.082s
+Thread pool: piscina (concurrency = 3): 3.970s
+Thread pool: multicore (concurrency = 4): 3.266s
+Thread pool: piscina (concurrency = 4): 3.409s
+Thread pool: multicore (concurrency = 5): 2.999s
+Thread pool: piscina (concurrency = 5): 3.110s
+Thread pool: multicore (concurrency = 6): 2.720s
+Thread pool: piscina (concurrency = 6): 2.444s
+Thread pool: multicore (concurrency = 7): 2.188s
+Thread pool: piscina (concurrency = 7): 2.147s
+Thread pool: multicore (concurrency = 10): 2.066s
+Thread pool: piscina (concurrency = 10): 2.334s
+Thread pool: multicore (concurrency = 25): 1.952s
+Thread pool: piscina (concurrency = 25): 2.242s
+Thread pool: multicore (concurrency = 100): 1.973s
+Thread pool: piscina (concurrency = 100): 2.191s
+Thread pool: multicore (concurrency = 500): 1.966s
+Thread pool: piscina (concurrency = 500): 2.179s
+✨  Done in 102.82s.
 ```
