@@ -14,6 +14,16 @@ const run = async (work, concurrencyLimit) => {
   return res;
 };
 
+exports.warmup = async (work) => {
+  let res = 0;
+  for (let i = 0; i < 16; i++) {
+    const promises = [];
+    for (let i = 0; i < 16; i++) promises.push(work());
+    res += await Promise.all(promises);
+  }
+  return res;
+};
+
 exports.test = async (name, work, concurrencyLimit = 25) => {
   const timingName = `${name} (concurrency = ${concurrencyLimit})`;
   console.time(timingName);

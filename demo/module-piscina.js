@@ -1,10 +1,10 @@
 
 const {resolve} = require('path');
-const {cpus} = require('os');
+const {pool} = require('../lib');
 const Piscina = require('piscina');
 
 const filename = resolve(__dirname, 'module.js');
-const piscina = new Piscina({filename, maxThreads: cpus().length - 1});
+const piscina = new Piscina({filename, maxThreads: pool.options.max});
 
 exports.loop = (iterations) => {
   return piscina.run(iterations, {name: 'loop'});
