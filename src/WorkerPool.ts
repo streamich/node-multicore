@@ -36,7 +36,7 @@ export class WorkerPool {
   constructor(options: Partial<WorkerPoolOptions> = {}) {
     this.options = {
       min: +(process.env.MC_MIN_THREAD_POOL_SIZE || '') || 0,
-      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || Math.max(1, Math.min(cpus().length - 1, 15)),
+      max: +(process.env.MC_MAX_THREAD_POOL_SIZE || '') || Math.max(1, Math.min(cpus().length - 1, 31)),
       trackUnmanagedFds: false,
       name: 'multicore',
       ...options,

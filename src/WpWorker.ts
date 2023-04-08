@@ -105,8 +105,8 @@ export class WpWorker {
       this.worker.off('message', this.onmessage);
       this.worker.unref();
     }
-    if (isError) channel.onError(data);
-    else channel.onResponse(data);
+    if (isError) channel.reject(data);
+    else channel.resolve(data);
   }
 
   protected onChannel(msg: WpMsgChannel): void {
@@ -156,7 +156,7 @@ export class WpWorker {
         this.worker.off('message', this.onmessage);
         this.worker.unref();
       }
-      channel.onError(error);
+      channel.reject(error);
     }
   }
 
