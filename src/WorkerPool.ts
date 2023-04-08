@@ -2,6 +2,7 @@ import {cpus} from 'os';
 import {Defer, mutex} from 'thingies';
 import {WpModule} from './WpModule';
 import {WpWorker} from './WpWorker';
+import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 
 export interface WorkerPoolOptions {
   /** Minimum number of worker threads to maintain. */
@@ -94,9 +95,11 @@ export class WorkerPool {
    * @param specifier Path to the worker module file.
    */
   public module(specifier: string): WpModule {
+    // TODO: resolve specifier
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
-    const module = new WpModule(this, specifier);
+    const definition = new WpModuleDefinitionStatic(specifier);
+    const module = new WpModule(this, definition);
     this.modules.set(specifier, module);
     return module;
   }

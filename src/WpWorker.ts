@@ -9,8 +9,10 @@ import type {
   WpMsgLoad,
   WpMsgLoaded,
   WpMsgChannel,
+  WpModuleDef,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
+import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
@@ -52,12 +54,14 @@ export class WpWorker {
    * Load a module in this worker.
    * @param module Module to load.
    */
-  public async loadModule(id: number, specifier: string): Promise<string[]> {
+  public async loadModule(id: number, definition: WpModuleDef): Promise<string[]> {
     const worker = this.worker;
     const msg: WpMsgLoad = {
       type: 'load',
       id,
-      specifier,
+      def: definition instanceof WpModuleDefinitionStatic
+        ? {type: 'static', specifier: definition.specifier}
+        : {type: 'func', text: definition.text},
     };
     this.send(msg, undefined);
     const methods = await new Promise<string[]>((resolve) => {

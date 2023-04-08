@@ -23,7 +23,17 @@ export interface WPMsgWorkerReady {
 export interface WpMsgLoad {
   type: 'load';
   id: number;
+  def: WpMsgLoadDefinitionStatic | WpMsgLoadDefinitionFunc;
+}
+
+export interface WpMsgLoadDefinitionStatic {
+  type: 'static';
   specifier: string;
+}
+
+export interface WpMsgLoadDefinitionFunc {
+  type: 'func';
+  text: string;
 }
 
 /** Module "loaded" response by a worker. */

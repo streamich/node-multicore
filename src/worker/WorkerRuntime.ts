@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import type {WorkerFn, WorkerCh, WorkerModule} from './types';
 import {WorkerModuleStatic} from './WorkerModuleStatic';
+import {WorkerModuleFunction} from './WorkerModuleFunction';
 
 export class WorkerRuntime {
   protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
@@ -98,8 +99,10 @@ export class WorkerRuntime {
   }
 
   /** Load a module in this worker thread. */
-  protected async onLoad({id, specifier}: WpMsgLoad) {
-    const module = new WorkerModuleStatic(id, specifier);
+  protected async onLoad({id, def}: WpMsgLoad) {
+    const module = def.type === 'static'
+      ? new WorkerModuleStatic(id, def.specifier)
+      : new WorkerModuleFunction(id, def.text);
     await module.load();
     const table = module.table();
     for (const [, id, fn] of table) this.methods.set(id, fn);

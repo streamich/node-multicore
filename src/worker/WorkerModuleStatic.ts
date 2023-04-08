@@ -1,10 +1,13 @@
 import {pathToFileURL} from 'url';
-import type {ModuleTableEntry, WorkerCh, WorkerFn, WorkerMethodsMap, WorkerModule} from "./types";
+import {AbstractWorkerModule} from './AbstractWorkerModule';
+import type {WorkerMethodsMap, WorkerModule} from "./types";
 
-export class WorkerModuleStatic implements WorkerModule {
+export class WorkerModuleStatic extends AbstractWorkerModule implements WorkerModule {
   public methods: WorkerMethodsMap = {};
 
-  constructor(public readonly id: number, public readonly specifier: string) {}
+  constructor(public readonly id: number, public readonly specifier: string) {
+    super();
+  }
 
   public async load(): Promise<void> {
     const specifier = this.specifier;
@@ -23,27 +26,6 @@ export class WorkerModuleStatic implements WorkerModule {
       return;
     }
     throw new Error('INVALID_MODULE');
-  }
-
-  public table(): ModuleTableEntry[] {
-    const table: ModuleTableEntry[] = [];
-    const sorted = Object.keys(this.methods).sort();
-    const moduleWord = this.id << 16;
-    for (let i = 0; i < sorted.length; i++) {
-      const key = sorted[i];
-      const method = this.methods[key];
-      const fn: WorkerFn | WorkerCh =
-        typeof method === 'function'
-        ? method as WorkerFn | WorkerCh
-        : method instanceof Promise
-          ? async (...args: any[]) => {
-            const awaited = await method;
-            return typeof awaited === 'function' ? awaited(...args) : awaited;
-          }
-          : () => method;
-      table.push([key, moduleWord | i, fn])
-    }
-    return table;
   }
 
   public async unload(): Promise<void> {

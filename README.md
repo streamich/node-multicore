@@ -25,7 +25,7 @@ const module = pool.module(filename).typed<Methods>();
 You can now call the exported functions from the module:
 
 ```ts
-const result = await module.exec([1, 2]); // 3
+const result = await module.exec('add', [1, 2]); // 3
 ```
 
 
