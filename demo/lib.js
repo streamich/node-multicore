@@ -16,9 +16,9 @@ const run = async (work, concurrencyLimit) => {
 
 exports.warmup = async (work) => {
   let res = 0;
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 24; i++) {
     const promises = [];
-    for (let i = 0; i < 16; i++) promises.push(work());
+    for (let i = 0; i < 24; i++) promises.push(work());
     res += await Promise.all(promises);
   }
   return res;

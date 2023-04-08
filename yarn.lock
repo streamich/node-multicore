@@ -2525,6 +2525,11 @@ which@^2.0.1:
   dependencies:
     isexe "^2.0.0"
 
+worker-nodes@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/worker-nodes/-/worker-nodes-2.4.0.tgz#cec23f5490ab0451bac4afaa50a079a89bd1c7c6"
+  integrity sha512-s32ziQpiWkWbB/ziFKiudpm5/mreSnwpTtKzPxgcPXpl+kXpesiibjM/2Z8i/lDO8kDCUio7wQFXtndopgfsUg==
+
 wrap-ansi@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
