@@ -3,6 +3,9 @@ import {Defer, mutex} from 'thingies';
 import {WpModule} from './WpModule';
 import {WpWorker} from './WpWorker';
 import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {sha256} from './util/sha';
+import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
+import {WorkerCh, WorkerFn} from './worker/types';
 
 export interface WorkerPoolOptions {
   /** Minimum number of worker threads to maintain. */
@@ -89,16 +92,21 @@ export class WorkerPool {
     return undefined;
   }
 
-  /**
-   * Load a module in all worker threads.
-   *
-   * @param specifier Path to the worker module file.
-   */
   public module(specifier: string): WpModule {
-    // TODO: resolve specifier
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
     const definition = new WpModuleDefinitionStatic(specifier);
+    const module = new WpModule(this, definition);
+    this.modules.set(specifier, module);
+    return module;
+  }
+
+  public fun(fn: WorkerFn<any, any> | WorkerCh<any, any, any, any>): WpModule {
+    const text = fn.toString();
+    const specifier = sha256(text);
+    const existingModule = this.modules.get(specifier);
+    if (existingModule) return existingModule;
+    const definition = new WpModuleDefinitionFunc(specifier, text);
     const module = new WpModule(this, definition);
     this.modules.set(specifier, module);
     return module;
