@@ -5,6 +5,11 @@ Multicore programming for Node.js made simple.
 
 ## Usage
 
+### Loading a module
+
+This is the preferred and main way to use this library. It allows you to load a
+module in a separate thread and call its exported functions.
+
 Create a module you want to be loaded in the thread pool, put it in a `module.ts` file:
 
 ```ts
@@ -26,6 +31,20 @@ You can now call the exported functions from the module:
 
 ```ts
 const result = await module.exec('add', [1, 2]); // 3
+```
+
+
+### Loading a function
+
+This method will create a module out of a single function and load it in the
+thread pool.
+
+```ts
+import {fun} from 'node-multicore';
+
+const fn = fun((a: number, b: number) => a + b);
+
+const result = await fn(1, 2); // 3
 ```
 
 
