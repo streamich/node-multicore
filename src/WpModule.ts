@@ -60,19 +60,27 @@ export class WpModule {
     const workers = this.workers;
     const worker = workers.worker();
     const channel = this.pool.channelAllocator.alloc() as WpChannel<Res, In, Out>;
-    if (worker) {
-      const id = this.methodId(method as string);
-      workers.maybeGrow(worker, id);
-      channel.methodId = id;
-      worker.attachChannel(req, transferList, channel as WpChannel);
-    } else {
-      go(async () => {
-        const worker = await workers.worker$();
+    try {
+      if (worker) {
         const id = this.methodId(method as string);
         workers.maybeGrow(worker, id);
         channel.methodId = id;
         worker.attachChannel(req, transferList, channel as WpChannel);
-      });
+      } else {
+        go(async () => {
+          try {
+            const worker = await workers.worker$();
+            const id = this.methodId(method as string);
+            workers.maybeGrow(worker, id);
+            channel.methodId = id;
+            worker.attachChannel(req, transferList, channel as WpChannel);
+          } catch (err) {
+            channel.reject(err);
+          }
+        });
+      }
+    } catch (err) {
+      channel.reject(err); 
     }
     return channel;
   }

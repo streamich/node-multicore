@@ -6,7 +6,7 @@ const moduleWorkerNodes = require('./module-worker-nodes');
 const modulePiscina = require('./module-piscina');
 const {pool} = require('../lib');
 
-const concurrencies = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+const concurrencies = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 1];
 
 const main = async () => {
   console.log(`CPU = ${cpus()[0].model}, Cores = ${cpus().length}, Max threads = ${pool.options.max}, Node = ${process.version}, Arch = ${process.arch}, OS = ${process.platform}`);

@@ -64,7 +64,7 @@ export class WpWorker {
         ? {type: 'static', specifier: definition.specifier}
         : {type: 'func', text: definition.text},
     ];
-    this.send(msg, undefined);
+    worker.postMessage(msg);
     const methods = await new Promise<string[]>((resolve) => {
       const onmessage = (msg: WpMessage) => {
         if (msg[0] !== MessageType.ModuleLoaded) return;
@@ -124,37 +124,14 @@ export class WpWorker {
     }
   }
 
-  protected onClose(msg: WpMsgResponse | WpMsgError): void {
-    const [seq, data, isError] = msg;
-    const channels = this.channels;
-    const channel = channels.get(seq);
-    if (!channel) return;
-    channels.delete(seq);
-    if (!channels.size) {
-      this.worker.off('message', this.onmessage);
-      this.worker.unref();
-    }
-    if (isError) channel.reject(data);
-    else channel.resolve(data);
-  }
-
   protected onChannelData([, seq, data]: WpMsgChannelData): void {
     const channel = this.channels.get(seq);
     if (!channel) return;
     channel.onData(data);
   }
 
-  protected sendRequest(seq: number, id: number, req: unknown, transferList: TransferList | undefined): void {
-    const request: WpMsgRequest = [MessageType.Request, seq, id, req];
-    this.send(request, transferList);
-  }
-
   public sendChannelData(seq: number, data: unknown, transferList: TransferList | undefined): void {
     const msg: WpMsgChannelData<unknown> = [MessageType.ChannelData, seq, data];
-    this.send(msg, transferList);
-  }
-
-  protected send(msg: unknown, transferList: TransferList | undefined): void {
     this.worker.postMessage(msg, transferList);
   }
 
@@ -164,22 +141,15 @@ export class WpWorker {
     const id = (this.lastMethodId = channel.methodId);
     const seq = this.seq++;
     const channels = this.channels;
+    const worker = this.worker;
     channel.onsend = (data, transferList) => this.sendChannelData(seq, data, transferList);
-    try {
-      if (!channels.size) {
-        this.worker.on('message', this.onmessage);
-        this.worker.ref();
-      }
-      channels.set(seq, channel);
-      this.sendRequest(seq, id, req, transferList);
-    } catch (error) {
-      channels.delete(seq);
-      if (!channels.size) {
-        this.worker.off('message', this.onmessage);
-        this.worker.unref();
-      }
-      channel.reject(error);
+    if (!channels.size) {
+      worker.on('message', this.onmessage);
+      worker.ref();
     }
+    channels.set(seq, channel);
+    const msg: WpMsgRequest = [MessageType.Request, seq, id, req];
+    worker.postMessage(msg, transferList);
   }
 
   public async shutdown(): Promise<void> {
