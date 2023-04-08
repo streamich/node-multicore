@@ -52,16 +52,28 @@ export class WpModule {
     return Array.from(this.toId.keys());
   }
 
-  public async ch<Res = unknown, In = unknown, Out = unknown>(
+  public ch<Res = unknown, In = unknown, Out = unknown>(
     method: string,
     req: unknown,
     transferList?: TransferList | undefined,
-  ): Promise<WpChannel<Res, In, Out>> {
+  ): WpChannel<Res, In, Out> {
     const workers = this.workers;
-    const worker = workers.worker() || (await workers.worker$());
-    const id = this.methodId(method as string);
-    workers.maybeGrow(worker, id);
-    const channel = worker.ch(id, req, transferList) as WpChannel<Res, In, Out>;
+    const worker = workers.worker();
+    const channel = new WpChannel<Res, In, Out>(0);
+    if (worker) {
+      const id = this.methodId(method as string);
+      workers.maybeGrow(worker, id);
+      channel.methodId = id;
+      worker.attachChannel(req, transferList, channel as WpChannel);
+    } else {
+      go(async () => {
+        const worker = await workers.worker$();
+        const id = this.methodId(method as string);
+        workers.maybeGrow(worker, id);
+        channel.methodId = id;
+        worker.attachChannel(req, transferList, channel as WpChannel);
+      });
+    }
     return channel;
   }
 
