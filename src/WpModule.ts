@@ -59,7 +59,7 @@ export class WpModule {
   ): WpChannel<Res, In, Out> {
     const workers = this.workers;
     const worker = workers.worker();
-    const channel = new WpChannel<Res, In, Out>(0);
+    const channel = this.pool.channelAllocator.alloc() as WpChannel<Res, In, Out>;
     if (worker) {
       const id = this.methodId(method as string);
       workers.maybeGrow(worker, id);
@@ -78,7 +78,10 @@ export class WpModule {
   }
 
   public async exec<R = unknown>(method: string, req: unknown, transferList?: TransferList | undefined): Promise<R> {
-    return this.ch<R>(method, req as any, transferList).result;
+    const channel = this.ch<R>(method, req as any, transferList);
+    const result = await channel.result;
+    this.pool.channelAllocator.free(channel);
+    return result;
   }
 
   public fn<Req = unknown, Res = unknown, In = unknown, Out = unknown>(method: string) {
