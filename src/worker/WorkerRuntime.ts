@@ -1,4 +1,7 @@
 import {WorkerResponse} from './WorkerResponse';
+import {MessageType} from '../message/constants';
+import {WorkerModuleStatic} from './WorkerModuleStatic';
+import {WorkerModuleFunction} from './WorkerModuleFunction';
 import type {MessagePort} from 'worker_threads';
 import type {
   TransferList,
@@ -6,16 +9,14 @@ import type {
   WpMessage,
   WpMsgRequest,
   WpMsgResponse,
-  WpMsgLoad,
-  WpMsgLoaded,
+  WpMsgLoadModule,
+  WpMsgModuleLoaded,
   WpMsgError,
-  WpMsgChannel,
+  WpMsgChannelData,
   WpSend,
   WpRecv,
 } from '../types';
 import type {WorkerFn, WorkerCh, WorkerModule} from './types';
-import {WorkerModuleStatic} from './WorkerModuleStatic';
-import {WorkerModuleFunction} from './WorkerModuleFunction';
 
 export class WorkerRuntime {
   protected readonly methods: Map<number, WorkerFn | WorkerCh> = new Map();
@@ -23,13 +24,18 @@ export class WorkerRuntime {
   protected readonly modules: Map<number, WorkerModule> = new Map();
 
   private readonly onmessage = (msg: WpMessage) => {
-    if (Array.isArray(msg)) {
-      if (Array.isArray(msg[0])) this.onChannel(msg as WpMsgChannel);
-      else this.onRequest(msg as WpMsgRequest);
-    } else if (msg && typeof msg === 'object') {
-      switch (msg.type) {
-        case 'load':
-          this.onLoad(msg).catch(() => {});
+    switch (msg[0]) {
+      case MessageType.Request: {
+        this.onRequest(msg);
+        break;
+      }
+      case MessageType.ChannelData: {
+        this.onChannel(msg);
+        break;
+      }
+      case MessageType.LoadModule: {
+        this.onLoadModule(msg);
+        break;
       }
     }
   };
@@ -38,17 +44,16 @@ export class WorkerRuntime {
     this.port.on('message', this.onmessage);
   }
 
-  protected onChannel(msg: WpMsgChannel): void {
-    const [[seq], data] = msg;
-    const callback = this.chs.get(seq);
-    if (callback) callback(data);
-  }
-
-  protected onRequest([seq, method, data]: WpMsgRequest): void {
+  protected onRequest([, seq, method, data]: WpMsgRequest): void {
     const fn = this.methods.get(method);
     if (!fn) return;
     if (fn.length === 1) this.fn(seq, fn as WorkerFn, data);
     else this.ch(seq, fn, data);
+  }
+
+  protected onChannel([, seq, data]: WpMsgChannelData): void {
+    const callback = this.chs.get(seq);
+    if (callback) callback(data);
   }
 
   protected fn(seq: number, fn: WorkerFn, data: unknown): void {
@@ -80,7 +85,7 @@ export class WorkerRuntime {
           transferList = data.transferList;
           data = data.data;
         }
-        const msg: WpMsgChannel = [[seq], data];
+        const msg: WpMsgChannelData = [MessageType.ChannelData, seq, data];
         this.port.postMessage(msg, transferList);
       };
       const recv: WpRecv<unknown> = (callback) => {
@@ -99,18 +104,14 @@ export class WorkerRuntime {
   }
 
   /** Load a module in this worker thread. */
-  protected async onLoad({id, def}: WpMsgLoad) {
+  protected async onLoadModule([, id, def]: WpMsgLoadModule) {
     const module = def.type === 'static'
       ? new WorkerModuleStatic(id, def.specifier)
       : new WorkerModuleFunction(id, def.text);
     await module.load();
     const table = module.table();
     for (const [, id, fn] of table) this.methods.set(id, fn);
-    const response: WpMsgLoaded = {
-      type: 'loaded',
-      id,
-      methods: table.map(([method]) => method),
-    };
+    const response: WpMsgModuleLoaded = [MessageType.ModuleLoaded, id, table.map(([method]) => method)];
     this.port.postMessage(response);
   }
 
@@ -121,7 +122,7 @@ export class WorkerRuntime {
       response = response.data;
     }
     try {
-      const msg: WpMsgResponse = [seq, response];
+      const msg: WpMsgResponse = [MessageType.Response, seq, response];
       this.port.postMessage(msg, transferList);
     } catch (error) {
       this.sendError(seq, error);
@@ -130,17 +131,17 @@ export class WorkerRuntime {
 
   protected sendError(seq: number, error: unknown): void {
     try {
-      const response: WpMsgError = [seq, error, true];
+      const response: WpMsgError = [MessageType.Error, seq, error];
       this.port.postMessage(response);
     } catch {
-      const response: WpMsgError = [seq, 'PORT', true];
+      const response: WpMsgError = [MessageType.Error, seq, 'PORT'];
       this.port.postMessage(response);
     }
   }
 
   /** Notify main thread that this worker thead has loaded. */
   public sendReady(): void {
-    const msg: WPMsgWorkerReady = {type: 'ready'};
+    const msg: WPMsgWorkerReady = [MessageType.WorkerReady];
     this.port.postMessage(msg);
   }
 }

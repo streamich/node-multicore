@@ -6,13 +6,14 @@ import type {
   WpMsgError,
   WpMsgRequest,
   WpMsgResponse,
-  WpMsgLoad,
-  WpMsgLoaded,
-  WpMsgChannel,
+  WpMsgLoadModule,
+  WpMsgChannelData,
   WpModuleDef,
+  WpMessage,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
 import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {MessageType} from './message/constants';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
@@ -58,25 +59,19 @@ export class WpWorker {
    */
   public async loadModule(id: number, definition: WpModuleDef): Promise<string[]> {
     const worker = this.worker;
-    const msg: WpMsgLoad = {
-      type: 'load',
-      id,
-      def: definition instanceof WpModuleDefinitionStatic
+    const msg: WpMsgLoadModule = [MessageType.LoadModule, id,
+      definition instanceof WpModuleDefinitionStatic
         ? {type: 'static', specifier: definition.specifier}
         : {type: 'func', text: definition.text},
-    };
+    ];
     this.send(msg, undefined);
     const methods = await new Promise<string[]>((resolve) => {
-      const onmessage = (msg: unknown) => {
-        if (
-          msg &&
-          typeof msg === 'object' &&
-          (msg as WpMsgLoaded).type === 'loaded' &&
-          (msg as WpMsgLoaded).id === id
-        ) {
-          worker.off('message', onmessage);
-          resolve((msg as WpMsgLoaded).methods);
-        }
+      const onmessage = (msg: WpMessage) => {
+        if (msg[0] !== MessageType.ModuleLoaded) return;
+        const [, responseId, methods] = msg;
+        if (responseId !== id) return;
+        worker.off('message', onmessage);
+        resolve(methods);
       };
       worker.on('message', onmessage);
     });
@@ -88,12 +83,46 @@ export class WpWorker {
     throw new Error('Not implemented');
   }
 
-  private onmessage = (msg: WpMsgResponse | WpMsgError | WpMsgChannel): void => {
-    if (!Array.isArray(msg)) return;
-    const [first] = msg;
-    if (typeof first === 'number') this.onClose(msg as WpMsgResponse | WpMsgError);
-    else this.onChannel(msg as WpMsgChannel);
+  private onmessage = (msg: WpMessage): void => {
+    switch (msg[0]) {
+      case MessageType.Response: {
+        this.onResponse(msg);
+        break;
+      }
+      case MessageType.ChannelData: {
+        this.onChannelData(msg);
+        break;
+      }
+      case MessageType.Error: {
+        this.onError(msg);
+        break;
+      }
+    }
   };
+
+  protected onResponse([, seq, data]: WpMsgResponse): void {
+    const channels = this.channels;
+    const channel = channels.get(seq);
+    if (!channel) return;
+    channels.delete(seq);
+    channel.resolve(data);
+    if (!channels.size) {
+      this.worker.off('message', this.onmessage);
+      this.worker.unref();
+    }
+  }
+
+  protected onError([, seq, data]: WpMsgError): void {
+    const channels = this.channels;
+    const channel = channels.get(seq);
+    if (!channel) return;
+    channels.delete(seq);
+    channel.reject(data);
+    if (!channels.size) {
+      this.worker.off('message', this.onmessage);
+      this.worker.unref();
+    }
+  }
 
   protected onClose(msg: WpMsgResponse | WpMsgError): void {
     const [seq, data, isError] = msg;
@@ -109,20 +138,19 @@ export class WpWorker {
     else channel.resolve(data);
   }
 
-  protected onChannel(msg: WpMsgChannel): void {
-    const [[seq], data] = msg;
+  protected onChannelData([, seq, data]: WpMsgChannelData): void {
     const channel = this.channels.get(seq);
     if (!channel) return;
     channel.onData(data);
   }
 
   protected sendRequest(seq: number, id: number, req: unknown, transferList: TransferList | undefined): void {
-    const request: WpMsgRequest = [seq, id, req];
+    const request: WpMsgRequest = [MessageType.Request, seq, id, req];
     this.send(request, transferList);
   }
 
   public sendChannelData(seq: number, data: unknown, transferList: TransferList | undefined): void {
-    const msg: WpMsgChannel<unknown> = [[seq], data];
+    const msg: WpMsgChannelData<unknown> = [MessageType.ChannelData, seq, data];
     this.send(msg, transferList);
   }
 
