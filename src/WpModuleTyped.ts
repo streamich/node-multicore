@@ -7,37 +7,36 @@ import type {WpChannel} from './WpChannel';
 export class WpModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WpModule) {}
 
-  public async init(): Promise<this> {
+  public readonly init = async (): Promise<this> => {
     await this.module.init();
     return this;
-  }
+  };
 
-  /** @todo Make it an arrow function. */
-  public ch<K extends keyof Methods>(
+  public readonly ch = <K extends keyof Methods>(
     method: K,
     req: Methods[K] extends WorkerMethod<infer Request, any> ? Request : never,
     transferList?: TransferList | undefined,
-  ) {
+  ) => {
     type Res = Methods[K] extends WorkerMethod<any, infer R> ? R : never;
     type Chan = Methods[K] extends WorkerCh<any, infer I, infer O, any> ? [I, O] : never;
     return this.module.ch<Res, Chan[0], Chan[1]>(method as string, req, transferList);
-  }
+  };
 
-  public async exec<K extends keyof Methods>(
+  public readonly exec = <K extends keyof Methods>(
     method: K,
     req: Methods[K] extends WorkerMethod<infer Request, any> ? Request : never,
     transferList?: TransferList | undefined,
-  ) {
+  ) => {
     type Res = Methods[K] extends WorkerMethod<any, infer R> ? R : never;
     return this.module.exec<Res>(method as string, req, transferList);
-  }
+  };
 
-  public fn<K extends keyof Methods>(method: K) {
+  public readonly fn = <K extends keyof Methods>(method: K) => {
     type Req = Methods[K] extends WorkerMethod<infer Request, any> ? Request : never;
     type Res = Methods[K] extends WorkerMethod<any, infer R> ? R : never;
     type Chan = Methods[K] extends WorkerCh<any, infer I, infer O, any> ? [I, O] : never;
     return this.module.fn<Req, Res, Chan[0], Chan[1]>(method as string);
-  }
+  };
 
   public api(): WorkerApi<Methods> {
     return this.module.api() as WorkerApi<Methods>;
