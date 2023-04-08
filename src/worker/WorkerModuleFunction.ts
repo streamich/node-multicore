@@ -9,6 +9,7 @@ export class WorkerModuleFunction extends AbstractWorkerModule implements Worker
   }
 
   public async load(): Promise<void> {
+    // tslint:disable-next-line no-eval ban
     const fn = eval(`(${this.text})`);
     this.methods = { default: fn };
   }
