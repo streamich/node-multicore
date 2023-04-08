@@ -3,18 +3,67 @@
 Multicore programming for Node.js made simple. Make any CommonJs or ESM module
 run in a thread pool.
 
-1. A shared thread pool, designed to be shared across all NPM packages. But
-   custom thread pools can be created as well.
-1. Dynamic thread pool. It starts from 0 threads and scales up to the number of
-   CPU cores as the load increases.
-1. Dynamically load (and potentially unload) modules in the thread pool. Module
-   concurrency is dynamic as well, initially a module is not loaded in the in
-   any thread, but as the load increases it will be loaded in increasingly more
-   threads.
-1. Dead threads are automatically removed from the pool.
+- Create a custom thread pool, or use a global shared one, designed to work
+  across all NPM packages.
+- Instant start&mdash;dynamic thread pool starts with 0 threads and scales up to
+  the number of CPU cores as the load increases.
+- Quickly load modules to the thread pool. Module concurrency is dynamic as well,
+  initially a module is not loaded in any of the threads, as the module
+  concurrency rises, the module is gradually loaded in more worker threads.
+- Channels&mdash;on each function invocation a bi-directional data channel is created
+  for that function, which allows you to stream data to the function and back.
+- Ability to pin a module to a single thread. Say, your thread holds state&mdash;
+  you can pin execution to a single thread, making subsequent method call hit
+  the same thread.
+- Quickly create a single function, which is loaded in worker threads.
+- Dead threads are automatically removed from the thread pool.
+- Fash&mdash;Node Multicore is as fast or faster as `poolifier` and `piscina`.
+- Shared thread pool&mdash;Node Multicore thread pool is designed to be a global
+  shared thread pool for all compute intensive NPM packages.
+
+
+## Getting started
+
+Install the package
+
+```
+npm install node-multicore
+```
+
+Create a `module.ts` that should be executed in the thread pool
+
+```ts
+import {WorkerFn} from 'node-multicore';
+
+export const add: WorkerFn<[number, number], number> = ([a, b]) => {
+  return a + b;
+};
+```
+
+Load your module from the main thread
+
+```ts
+import {resolve} from 'path';
+import {pool} from 'node-multicore';
+
+const path = resolve(__dirname, 'module');
+type Methods = typeof import('./module');
+
+const math = pool.module(path).typed<Method>();
+```
+
+Now call your methods from the main thread
+
+```ts
+const result = await math.exec('add', [1, 2]); // 3
+```
 
 
 ## Usage
+
+- The thread pool
+- Modules
+- Channels
 
 ### Loading a module
 
