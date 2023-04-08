@@ -2,11 +2,11 @@ import type {WpModule} from './WpModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerMethod, WorkerMethodsMap} from './worker/types';
 import type {WpChannel} from './WpChannel';
-import type {WorkerPoolWorker} from './WorkerPoolWorker';
+import type {WpWorker} from './WpWorker';
 
 /** Module pinned to a single worker. */
-export class WorkerPoolModulePinned<Methods extends WorkerMethodsMap> {
-  constructor(protected readonly module: WpModule, protected readonly worker: WorkerPoolWorker) {}
+export class WpModulePinned<Methods extends WorkerMethodsMap> {
+  constructor(protected readonly module: WpModule, protected readonly worker: WpWorker) {}
 
   public ch<K extends keyof Methods>(
     method: K,

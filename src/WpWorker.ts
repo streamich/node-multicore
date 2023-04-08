@@ -19,7 +19,7 @@ export interface WorkerPoolWorkerOptions {
   onExit: () => void;
 }
 
-export class WorkerPoolWorker {
+export class WpWorker {
   private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WpChannel> = new Map();

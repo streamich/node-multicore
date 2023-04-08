@@ -1,10 +1,10 @@
-import {WorkerPoolModulePinned} from './WorkerPoolModulePinned';
+import {WpModulePinned} from './WpModulePinned';
 import type {WpModule} from './WpModule';
 import type {TransferList} from './types';
 import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
 import type {WpChannel} from './WpChannel';
 
-export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
+export class WpModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WpModule) {}
 
   public async init(): Promise<this> {
@@ -45,10 +45,10 @@ export class WorkerPoolModuleTyped<Methods extends WorkerMethodsMap> {
     return api as WorkerApi<Methods>;
   }
 
-  public pinned<Methods extends WorkerMethodsMap>(): WorkerPoolModulePinned<Methods> {
+  public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
     const worker = this.module.workers.worker();
     if (!worker) throw new Error('NO_WORKER');
-    return new WorkerPoolModulePinned(this.module, worker);
+    return new WpModulePinned(this.module, worker);
   }
 }
 

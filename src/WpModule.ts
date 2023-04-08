@@ -1,10 +1,10 @@
 import {go} from 'thingies';
-import {WorkerPoolModuleTyped} from './WorkerPoolModuleTyped';
-import {WorkerPoolModuleWorkerSet} from './WorkerPoolModuleWorkerSet';
+import {WpModuleTyped} from './WpModuleTyped';
+import {WpModuleWorkerSet} from './WpModuleWorkerSet';
 import {WpChannel} from './WpChannel';
 import type {WorkerMethodsMap} from './worker/types';
 import type {WorkerPool} from './WorkerPool';
-import type {WorkerPoolWorker} from './WorkerPoolWorker';
+import type {WpWorker} from './WpWorker';
 import type {TransferList} from './types';
 
 let id = 0;
@@ -17,10 +17,10 @@ let id = 0;
 export class WpModule {
   public readonly id: number = id++;
   protected readonly toId: Map<string, number> = new Map();
-  public readonly workers: WorkerPoolModuleWorkerSet;
+  public readonly workers: WpModuleWorkerSet;
 
   constructor(protected readonly pool: WorkerPool, public readonly specifier: string) {
-    this.workers = new WorkerPoolModuleWorkerSet(pool, this);
+    this.workers = new WpModuleWorkerSet(pool, this);
   }
 
   public isInitialized(): boolean {
@@ -32,13 +32,13 @@ export class WpModule {
     return this;
   }
 
-  public async loadInWorker(worker: WorkerPoolWorker): Promise<void> {
+  public async loadInWorker(worker: WpWorker): Promise<void> {
     const methods = await worker.loadModule(this.id, this.specifier);
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++) this.toId.set(methods[i], moduleWord | i);
   }
 
-  public async unloadInWorker(worker: WorkerPoolWorker): Promise<void> {
+  public async unloadInWorker(worker: WpWorker): Promise<void> {
     await worker.unloadModule(this.id);
   }
 
@@ -89,11 +89,11 @@ export class WpModule {
     };
   }
 
-  public typed<Methods extends WorkerMethodsMap>(): WorkerPoolModuleTyped<Methods> {
-    return new WorkerPoolModuleTyped(this);
+  public typed<Methods extends WorkerMethodsMap>(): WpModuleTyped<Methods> {
+    return new WpModuleTyped(this);
   }
 
-  public removeWorker(worker: WorkerPoolWorker): void {
+  public removeWorker(worker: WpWorker): void {
     this.workers.removeWorker(worker);
   }
 }
