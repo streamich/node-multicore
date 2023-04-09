@@ -1,11 +1,11 @@
 import {go} from 'thingies';
 import {WpModuleTyped} from './WpModuleTyped';
 import {WpModuleWorkerSet} from './WpModuleWorkerSet';
-import {WpChannel} from './WpChannel';
-import type {WorkerMethodsMap} from './worker/types';
-import type {WorkerPool} from './WorkerPool';
-import type {WpWorker} from './WpWorker';
-import type {TransferList, WpModuleDef} from './types';
+import {WpChannel} from '../channel/WpChannel';
+import type {WorkerMethodsMap} from '../worker/types';
+import type {WorkerPool} from '../WorkerPool';
+import type {WpWorker} from '../WpWorker';
+import type {TransferList, WpModuleDef} from '../types';
 
 let id = 0;
 

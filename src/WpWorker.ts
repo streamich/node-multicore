@@ -1,10 +1,9 @@
 import {resolve} from 'path';
 import {Worker, type WorkerOptions} from 'worker_threads';
-import {WpChannel} from './WpChannel';
+import {WpChannel} from './channel/WpChannel';
 import type {
   TransferList,
   WpMsgError,
-  WpMsgRequest,
   WpMsgResponse,
   WpMsgLoadModule,
   WpMsgChannelData,
@@ -12,7 +11,7 @@ import type {
   WpMessage,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
-import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
 import {MessageType} from './message/constants';
 
 const fileName = resolve(__dirname, 'worker', 'main');

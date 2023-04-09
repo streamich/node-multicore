@@ -1,12 +1,12 @@
 import {cpus} from 'os';
 import {Defer, mutex} from 'thingies';
-import {WpModule} from './WpModule';
+import {WpModule} from './module/WpModule';
 import {WpWorker} from './WpWorker';
-import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
 import {sha256} from './util/sha';
-import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
+import {WpModuleDefinitionFunc} from './module/WpModuleDefinitionFunc';
 import {WorkerCh, WorkerFn} from './worker/types';
-import {WpChannelAllocator} from './WpChannelAllocator';
+import {WpChannelAllocator} from './channel/WpChannelAllocator';
 import type {WorkerOptions} from 'worker_threads';
 
 export interface WorkerPoolOptions {

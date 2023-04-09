@@ -1,6 +1,6 @@
 import type {TransferListItem} from 'worker_threads';
-import type {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
-import type {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import type {WpModuleDefinitionFunc} from './module/WpModuleDefinitionFunc';
+import type {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
 
 export * from './message/types';
 
