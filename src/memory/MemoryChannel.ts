@@ -19,7 +19,7 @@ export class MemoryChannel {
     this.encoder = new CborEncoder(this.writer);
   }
 
-  public subscribe(onmessage: (data: unknown, slot: MemoryPortSlot) => void = () => {}) {
+  public subscribe(onmessage: (data: any) => void = () => {}) {
     this.incoming.onmessage = onmessage;
     this.incoming.subscribe();
   }

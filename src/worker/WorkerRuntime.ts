@@ -48,10 +48,7 @@ export class WorkerRuntime {
 
   constructor(protected readonly port: MessagePort, protected readonly memory: MemoryChannel) {
     this.port.on('message', this.onmessage);
-
-    memory.subscribe((msg) => {
-      console.log('MESSAGE', msg);
-    });
+    memory.subscribe(this.onmessage);
   }
 
   protected onRequest([, seq, method, data]: WpMsgRequest): void {
@@ -150,9 +147,5 @@ export class WorkerRuntime {
   public sendReady(): void {
     const msg: WPMsgWorkerReady = [MessageType.WorkerReady];
     this.port.postMessage(msg);
-  }
-
-  public send(move: TransferList, msg: WpMessage): void {
-    
   }
 }

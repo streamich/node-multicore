@@ -8,7 +8,7 @@ export class MemoryPort {
 
   public readonly sab: SharedArrayBuffer;
   public readonly slots: MemoryPortSlot[];
-  public onmessage: (data: unknown, slot: MemoryPortSlot) => void = () => {};
+  public onmessage: (data: unknown) => void = () => {};
 
   /**
    * @param slotBodySizes Slot body sizes in bytes, sorted ASC.
@@ -45,7 +45,7 @@ export class MemoryPort {
 
   private subscribeSlot(slot: MemoryPortSlot): void {
     slot.receive().then((data) => {
-      this.onmessage(data, slot);
+      this.onmessage(data);
       this.subscribeSlot(slot);
     });
   }

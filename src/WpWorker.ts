@@ -92,6 +92,14 @@ export class WpWorker {
     throw new Error('Not implemented');
   }
 
+  protected send(move: TransferList | undefined, message: WpMessage) {
+    if (!move || !move.length) {
+      this.memory.send(message);
+      return;
+    }
+    this.worker.postMessage(message, move);
+  }
+
   private onmessage = (msg: WpMessage): void => {
     switch (msg[0]) {
       case MessageType.Response: {
@@ -161,7 +169,7 @@ export class WpWorker {
     msg[1] = seq;
     msg[2] = id;
     msg[3] = req;
-    worker.postMessage(msg, transferList);
+    this.send(transferList, msg);
     msg[3] = null;
   }
 

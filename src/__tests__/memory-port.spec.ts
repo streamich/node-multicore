@@ -3,5 +3,6 @@ import {module as math} from '../demo/multicore-math';
 
 test('...', async () => {
   await pool.grow();
-  console.log('pool');
+  const res = await math.exec('add', [1, 1]);
+  console.log('res', res);
 });
