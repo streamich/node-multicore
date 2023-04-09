@@ -37,8 +37,17 @@ export class MemoryChannel {
     const {encoder, writer} = this;
     writer.reset();
     encoder.writeAny(copy);
-    const slot = writer.slot;
+    const slot = writer.flushSlot();
     if (slot) slot.send();
     else this.onLargeMessage(writer.flush());
+  }
+
+  public store(copy: unknown): MemoryPortSlot | Uint8Array {
+    const {encoder, writer} = this;
+    writer.reset();
+    encoder.writeAny(copy);
+    const slot = writer.flushSlot();
+    if (slot) return slot;
+    return writer.flush();
   }
 }

@@ -4,5 +4,5 @@ export const enum MemoryPortSizing {
 
 export const enum HeaderIndex {
   Send = 0,
-  Unlock = 1,
+  Ack = 1,
 }

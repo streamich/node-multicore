@@ -1,5 +1,4 @@
 import {MemoryPortSlot} from "./MemoryPortSlot";
-import {decoder} from "./codec";
 import {MemoryPortSizing} from "./constants";
 
 export class MemoryPort {
@@ -20,9 +19,10 @@ export class MemoryPort {
     this.sab = sab ?? new SharedArrayBuffer(totalSize);
     const slots: MemoryPortSlot[] = [];
     let offset = 0;
-    for (let slotBodySize of slotBodySizes) {
+    for (let i = 0; i < slotBodySizes.length; i++) {
+      const slotBodySize = slotBodySizes[i];
       const slotSize = MemoryPortSizing.HeaderSize + slotBodySize;
-      const slot = new MemoryPortSlot(this.sab, offset, slotSize);
+      const slot = new MemoryPortSlot(i, this.sab, offset, slotSize);
       offset += slotSize;
       slots.push(slot);
     }
@@ -44,14 +44,9 @@ export class MemoryPort {
   }
 
   private subscribeSlot(slot: MemoryPortSlot): void {
-    slot.receive().then(() => {
-      try {
-        const body = slot.body;
-        const data = decoder.decode(body);
-        this.onmessage(data, slot);
-      } finally {
-        slot.unlock();
-      }
+    slot.receive().then((data) => {
+      this.onmessage(data, slot);
+      this.subscribeSlot(slot);
     });
   }
 }

@@ -1,3 +1,4 @@
+import {decoder} from "./codec";
 import {HeaderIndex, MemoryPortSizing} from "./constants";
 
 export class MemoryPortSlot {
@@ -6,6 +7,7 @@ export class MemoryPortSlot {
   public locked: boolean = false;
 
   constructor(
+    public index: number,
     sab: SharedArrayBuffer,
     offset: number,
     byteLength: number
@@ -15,32 +17,40 @@ export class MemoryPortSlot {
     this.body = new Uint8Array(sab, offset + this.header.byteLength, byteLength - this.header.byteLength);
   }
 
-  public lock(): void {
-    this.locked = true;
-  }
-
   public send(): void {
-    const unlock = Atomics.waitAsync(this.header, HeaderIndex.Unlock, 0);
-    if (!unlock.async) {
-      this.locked = false;
-      throw new Error('BROKEN_UNLOCK');
-    }
-    unlock.value.then(() => {
-      this.locked = false;
-    });
     Atomics.notify(this.header, HeaderIndex.Send);
+    this.listenForAck();
+  }
+  
+  protected ack(): void {
+    Atomics.notify(this.header, HeaderIndex.Ack);
   }
 
-  public async receive(): Promise<void> {
+  public async receive(): Promise<unknown> {
     const unlock = Atomics.waitAsync(this.header, HeaderIndex.Send, 0);
     if (!unlock.async) {
       this.locked = false;
       throw new Error('BROKEN_RECEIVE');
     }
     await unlock.value;
+    const data = decoder.decode(this.body);
+    this.ack();
+    return data;
   }
 
-  public unlock(): void {
-    Atomics.notify(this.header, HeaderIndex.Unlock);
+  private listenForAckPromise: Promise<unknown> | undefined;
+  protected listenForAck(): void {
+    if (this.listenForAckPromise) return;
+    const unlock = Atomics.waitAsync(this.header, HeaderIndex.Ack, 0);
+    if (!unlock.async) {
+      this.locked = false;
+      return;
+    }
+    this.listenForAckPromise = unlock.value;
+    this.listenForAckPromise.then(() => {
+      this.locked = false;
+      this.listenForAckPromise = undefined;
+      this.listenForAck();
+    });
   }
 }
