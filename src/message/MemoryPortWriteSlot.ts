@@ -15,8 +15,11 @@ export class MemoryPortWriteSlot {
     this.body = new Uint8Array(sab, offset + this.header.byteLength, byteLength - this.header.byteLength);
   }
 
-  public lockAndNotify(): void {
+  public lock(): void {
     this.locked = true;
+  }
+
+  public send(): void {
     const unlock = Atomics.waitAsync(this.header, 1, 0);
     if (!unlock.async) throw new Error('BROKEN_UNLOCK');
     unlock.value.then(() => {

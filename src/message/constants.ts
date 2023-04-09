@@ -10,5 +10,5 @@ export const enum MessageType {
 }
 
 export const enum MessagePort {
-  HeaderSize = 8,
+  HeaderSize = 4 * 2,
 }

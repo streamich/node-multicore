@@ -2,6 +2,10 @@ import {MemoryPortWriteSlot} from "./MemoryPortWriteSlot";
 import {MessagePort} from "./constants";
 
 export class MemoryPortWriter {
+  public static create(): MemoryPortWriter {
+    return new MemoryPortWriter([256, 512, 1024, 2048, 2048, 4096, 4096, 8192, 8192, 16384, 16384, 32768]);
+  }
+
   public readonly slots: MemoryPortWriteSlot[];
 
   /**
@@ -22,8 +26,12 @@ export class MemoryPortWriter {
   }
 
   public find(minSize: number): MemoryPortWriteSlot | undefined {
-    for (let slot of this.slots)
+    const slots = this.slots;
+    const length = slots.length;
+    for (let i = 0; i < length; i++) {
+      const slot = slots[i];
       if (!slot.locked && slot.body.byteLength >= minSize) return slot;
+    }
     return undefined;
   }
 }
