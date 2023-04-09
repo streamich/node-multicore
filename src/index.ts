@@ -8,5 +8,5 @@ export {taker} from './worker/util';
 export {pool} from './singleton';
 export * from './static';
 export type {TransferList} from './types';
-export type {WpChannel as WorkerPoolChannel} from './WpChannel';
+export type {WpChannel as WorkerPoolChannel} from './channel/WpChannel';
 export {WorkerPool} from './WorkerPool';

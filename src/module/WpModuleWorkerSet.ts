@@ -1,7 +1,7 @@
 import {Defer, mutex} from 'thingies';
-import type {WorkerPool} from './WorkerPool';
+import type {WorkerPool} from '../WorkerPool';
 import type {WpModule} from './WpModule';
-import type {WpWorker} from './WpWorker';
+import type {WpWorker} from '../WpWorker';
 
 /**
  * Tracks worker thread set in which current modules has been loaded. This

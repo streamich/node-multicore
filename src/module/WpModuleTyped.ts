@@ -1,8 +1,8 @@
 import {WpModulePinned} from './WpModulePinned';
 import type {WpModule} from './WpModule';
-import type {TransferList} from './types';
-import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
-import type {WpChannel} from './WpChannel';
+import type {TransferList} from '../types';
+import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from '../worker/types';
+import type {WpChannel} from '../channel/WpChannel';
 
 export class WpModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WpModule) {}

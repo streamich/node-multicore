@@ -1,5 +1,5 @@
-import {MessageType} from './message/constants';
-import type {TransferList, WpMsgRequest} from './types';
+import {MessageType} from '../message/constants';
+import type {TransferList, WpMsgRequest} from '../types';
 
 export class WpChannel<Res = unknown, In = unknown, Out = unknown> {
   public ondata?: (data: In) => void = undefined;
