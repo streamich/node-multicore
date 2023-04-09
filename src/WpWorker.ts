@@ -1,6 +1,9 @@
 import {resolve} from 'path';
 import {Worker, type WorkerOptions} from 'worker_threads';
 import {WpChannel} from './channel/WpChannel';
+import {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
+import {MessageType} from './message/constants';
+import {MemoryChannel} from './memory/MemoryChannel';
 import type {
   TransferList,
   WpMsgError,
@@ -9,10 +12,9 @@ import type {
   WpMsgChannelData,
   WpModuleDef,
   WpMessage,
+  WorkerData,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
-import {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
-import {MessageType} from './message/constants';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
@@ -25,14 +27,19 @@ export class WpWorker {
   private worker: Worker;
   protected seq: number = 0;
   protected readonly channels: Map<number, WpChannel> = new Map();
+  protected readonly memory = MemoryChannel.create();
 
   constructor(protected readonly options: WorkerPoolWorkerOptions) {
     const {pool} = options;
+    const workerData: WorkerData = {
+      memory: this.memory.export(),
+    };
     const workerOptions: WorkerOptions & {name: string} = {
       name: pool.options.name,
       env: pool.options.env,
       trackUnmanagedFds: pool.options.trackUnmanagedFds,
       resourceLimits: pool.options.resourceLimits,
+      workerData,
     };
     this.worker = new Worker(fileName, workerOptions);
   }

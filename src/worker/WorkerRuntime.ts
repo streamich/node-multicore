@@ -17,6 +17,7 @@ import type {
   WpRecv,
 } from '../types';
 import type {WorkerFn, WorkerCh, WorkerModule} from './types';
+import type {MemoryChannel} from '../memory/MemoryChannel';
 
 type Wrapper = (seq: number, data: unknown) => unknown;
 
@@ -45,7 +46,7 @@ export class WorkerRuntime {
     }
   };
 
-  constructor(protected readonly port: MessagePort) {
+  constructor(protected readonly port: MessagePort, protected readonly memory: MemoryChannel) {
     this.port.on('message', this.onmessage);
   }
 
