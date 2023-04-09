@@ -19,8 +19,7 @@ export class MemoryPortSlot {
     this.locked = true;
   }
 
-  public send(size: number): void {
-    this.header[HeaderIndex.BodySize] = size;
+  public send(): void {
     const unlock = Atomics.waitAsync(this.header, HeaderIndex.Unlock, 0);
     if (!unlock.async) {
       this.locked = false;

@@ -42,6 +42,7 @@ export class WpWorker {
       workerData,
     };
     this.worker = new Worker(fileName, workerOptions);
+    this.memory.onLargeMessage = () => {};
   }
 
   public tasks(): number {

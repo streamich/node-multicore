@@ -4,3 +4,5 @@ export interface MemoryChannelExport {
   outgoing: SharedArrayBuffer;
   outgoingSlots: number[];
 }
+
+export type Send = (data: Uint8Array) => void;

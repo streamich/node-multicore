@@ -1,4 +1,5 @@
 import {MemoryPortSlot} from "./MemoryPortSlot";
+import {decoder} from "./codec";
 import {MemoryPortSizing} from "./constants";
 
 export class MemoryPort {
@@ -8,6 +9,7 @@ export class MemoryPort {
 
   public readonly sab: SharedArrayBuffer;
   public readonly slots: MemoryPortSlot[];
+  public onmessage: (data: unknown, slot: MemoryPortSlot) => void = () => {};
 
   /**
    * @param slotBodySizes Slot body sizes in bytes, sorted ASC.
@@ -35,5 +37,21 @@ export class MemoryPort {
       if (!slot.locked && slot.body.byteLength >= minSize) return slot;
     }
     return undefined;
+  }
+  
+  public subscribe(): void {
+    for (const slot of this.slots) this.subscribeSlot(slot);
+  }
+
+  private subscribeSlot(slot: MemoryPortSlot): void {
+    slot.receive().then(() => {
+      try {
+        const body = slot.body;
+        const data = decoder.decode(body);
+        this.onmessage(data, slot);
+      } finally {
+        slot.unlock();
+      }
+    });
   }
 }
