@@ -8,3 +8,7 @@ export const enum MessageType {
   ModuleLoaded,
   UnloadModule,
 }
+
+export const enum MessagePort {
+  HeaderSize = 8,
+}
