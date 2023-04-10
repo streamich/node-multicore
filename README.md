@@ -23,6 +23,29 @@ run in a thread pool.
 - Shared thread pool&mdash;Node Multicore thread pool is designed to be a global
   shared thread pool for all compute intensive NPM packages.
 
+Table of contents:
+
+- [Getting started](#getting-started)
+- [The thread pool](#the-thread-pool)
+  - [The global thread pool](#the-global-thread-pool)
+  - [Creating a custom thread pool](#creating-a-custom-thread-pool)
+- [Modules](#modules)
+  - [Static modules](#static-modules)
+  - [Single function modules](#single-function-modules)
+  - [Dynamic CommonJs modules](#dynamic-commonjs-modules)
+  - [*Module Expressions*](#module-expressions)
+- Module exports
+  - Functions
+  - Channels
+  - Promises
+  - Other exports
+- Advanced concepts
+  - Pinning a thread
+  - Transferring data by ownership
+- Multicore packages
+  - Creating `.multicore` packages
+- [Demo / Benchmark](#demo--benchmark)
+
 
 ## Getting started
 
@@ -61,31 +84,9 @@ const result = await math.exec('add', [1, 2]); // 3
 ```
 
 
-## Usage guide
+## The thread pool
 
-- [The thread pool](#the-thread-pool)
-  - [The global thread pool](#the-global-thread-pool)
-  - [Creating a custom thread pool](#creating-a-custom-thread-pool)
-- [Modules](#modules)
-  - Static modules
-  - Anonymous function modules
-  - [Dynamic CommonJs modules](#dynamic-commonjs-modules)
-  - Module expressions
-- Module exports
-  - Functions
-  - Channels
-  - Promises
-  - Other exports
-- Advanced concepts
-  - Pinning a thread
-  - Transferring data by ownership
-- Multicore packages
-  - Creating `.multicore` packages
-
-
-### The thread pool
-
-#### The global thread pool
+### The global thread pool
 
 The `node-multicore` thread pool is designed to be a single shared global thread
 pool for all compute intensive NPM packages. You can import it as follows:
@@ -101,7 +102,7 @@ minimum and maxium number of threads in the thread pool using the `MC_MIN_THREAD
 and `MC_MAX_THREAD_POOL_SIZE` environment variables.
 
 
-#### Creating a custom thread pool
+### Creating a custom thread pool
 
 The thread pool is designed to be a shared resource, so it is not
 recommended to create your own pool. However, if you need to create a separate
@@ -131,7 +132,7 @@ When creating a thread pool, you can pass the following options:
   `process.env`.
 
 
-### Modules
+## Modules
 
 A unit of parallelism in JavaScript is a module. You can load a module in the
 thread pool and call its exported functions.
@@ -141,7 +142,7 @@ module is not loaded in any of the threads initially, but as the module
 concurrency rises, the module is gradually loaded in more worker threads.
 
 
-#### Static modules
+### Static modules
 
 This is the preferred way to use this library, it will load a module by a global
 "specifier" `pool.module(specifier)` in the thread pool and you can call its
@@ -173,7 +174,7 @@ This will create a type-safe wrapper, which knows the types of the exported
 functions. You can now call the exported functions from the module in one of the
 following ways:
 
-##### Using the `.exec()` method
+#### Using the `.exec()` method
 
 This will execute the function in one of the threads in the thread pool and
 return the result as a promise.
@@ -182,7 +183,7 @@ return the result as a promise.
 const result = await typed.exec('add', [1, 2]); // 3
 ```
 
-##### Using the `.ch()` method
+#### Using the `.ch()` method
 
 Every function call creates a channel, which is a duplex stream (more on that
 later). By calling the `.ch()` method, you can get a reference to the channel.
@@ -194,7 +195,7 @@ const result = await typed.ch('add', [1, 2]).result; // 3
 ```
 
 
-##### Using the `.api()` builder
+#### Using the `.api()` builder
 
 You can construct an "API" object of your module using the `.api()` method.
 
@@ -209,7 +210,7 @@ const result = await api.add(1, 2).result; // 3
 ```
 
 
-##### Using the `.fn()` closure
+#### Using the `.fn()` closure
 
 To use this method you need to make sure that you module is loaded in at least
 one thread. You can achieve that by calling the `module.init()` method.
@@ -231,10 +232,10 @@ const result = await add(1, 2).result; // 3
 ```
 
 
-### Loading a function
+### Single function modules
 
-This method will create a module out of a single function and load it in the
-thread pool.
+The `fun()` method will create a module out of a single function and load it in
+the main thread pool.
 
 ```ts
 import {fun} from 'node-multicore';
@@ -244,11 +245,19 @@ const fn = fun((a: number, b: number) => a + b);
 const result = await fn(1, 2); // 3
 ```
 
-### Channels
+Note, when using the `fun()` method do not get access to the underlying channel
+and you can specify all function arguments in function call `fn(1, 2)` instead of
+as an array `fn([1, 2])`.
 
-Channels are a way to stream data to a function and back. A channel is created
-for each function call. The channel is a duplex stream, which means you can
-write to it and read from it.
+Under the hood, the `fun()` method creates a module with a single function. You
+can achieve that manually as well:
+
+```ts
+const module = pool.fun((a: number, b: number) => a + b);
+```
+
+Now the `module` object is just like any other module, the single function is
+exported as `default`.
 
 
 ### Dynamic CommonJs modules
@@ -311,6 +320,21 @@ node -r ts-node/register src/demo/cjs-text.ts
 ```
 
 
+### *Module Expressions*
+
+[ECMAScript *Module Expressions*](https://github.com/tc39/proposal-module-expressions)
+proposal will allow to create anonymous modules at runtime, which can then be
+copied to other threads. This library will support this proposal once it is
+implemented in Node.js.
+
+
+## Channels
+
+Channels are a way to stream data to a function and back. A channel is created
+for each function call. The channel is a duplex stream, which means you can
+write to it and read from it.
+
+
 ## Demo / Benchmark
 
 Run a demo with the following commands:
@@ -319,9 +343,6 @@ Run a demo with the following commands:
 yarn
 yarn demo
 ```
-
-The demo executes this [`work` function](demo/module.js) on a single core vs.
-in the thread pool. The results are printed to the console.
 
 Sample output:
 
