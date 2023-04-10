@@ -36,9 +36,9 @@ Table of contents:
   - [Channels](#channels)
   - [Promises](#promises)
   - [Other exports](#other-exports)
-- Advanced concepts
-  - Pinning a thread
-  - Transferring data by ownership
+- [Advanced concepts](#advanced-concepts)
+  - [Pinning a thread](#pinning-a-thread)
+  - [Transferring data by ownership](#transferring-data-by-ownership)
 - Multicore packages
   - Creating `.multicore` packages
 - [Demo / Benchmark](#demo--benchmark)
@@ -382,6 +382,69 @@ to anything else, the value will be returned.
 
 All other exports are returned to the main thread as is, using the `postMessage`
 copy algorithm.
+
+
+## Advanced topics
+
+### Pinning a thread
+
+Sometimes your threads need to share state. In that case you may want to pin
+a series of module calls to the same thread. You can do that by calling the
+`pinned()` method on a module.
+
+```ts
+const pinned = module.pinned();
+```
+
+Then use the `pinned` object to call the module functions:
+
+```ts
+const result = await pinned.ch('add', [1, 2]).result;
+``` 
+
+All calls through the `pinned` instance will be executed on the same thread.
+
+
+### Transferring data by ownership
+
+When you are sending data between threads, the most efficient way is to transfer
+ownership of the data. You can do that using the `ArrayBuffer` objects. This way
+the data will not be copied, but instead the buffers will be truncated in the
+current thread and become available in the new thread.
+
+Transfer buffers when executing a function:
+
+```ts
+module.exec('fn', params, [buffer1, buffer2, buffer3]);
+```
+
+Transfers buffers when writing to a channel from the main thread:
+
+```ts
+const channel = module.ch('fn', params, [buffer1, buffer2, buffer3]);
+
+channel.send(123, [buffer4, buffer5, buffer6]);
+```
+
+Transfer buffers when returning a value using the `msg` helper:
+
+```ts
+import {msg} from 'node-multicore';
+
+export const add = ([a: number, b: number]) => {
+  return msg(a + b, [buffer1, buffer2, buffer3]);
+};
+```
+
+Transfer buffers when writing to a channel from a worker thread:
+
+```ts
+export const method = (params, send, recv) => {
+  send(123, [buffer1, buffer2, buffer3]);
+  send(456, [buffer4, buffer5, buffer6]);
+  return 123;
+};
+```
 
 
 ## Demo / Benchmark
