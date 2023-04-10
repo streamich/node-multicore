@@ -1,8 +1,10 @@
 # Node Multicore
 
-Multicore programming for Node.js made simple. Make any CommonJs or ESM module
+Parallel programming for Node.js made easy. Make any CommonJs or ESM module
 run in a thread pool.
 
+- __Global thread pool__&mdash;Node Multicore is designed to be a global shared
+  thread pool for all compute intensive NPM packages.
 - Create a custom thread pool, or use a global shared one, designed to work
   across all NPM packages.
 - Instant start&mdash;dynamic thread pool starts with 0 threads and scales up to
@@ -59,13 +61,15 @@ const result = await math.exec('add', [1, 2]); // 3
 ```
 
 
-## Usage
+## Usage guide
 
 - The thread pool
 - Modules
 - Channels
-- Anon functions
 - Pinning a thread
+- Transferring data by ownership
+- Anonymous function modules
+- [Dynamic CommonJs modules](#dynamic-commonjs-modules)
 - Creating multicore packages
 
 ### Loading a module
@@ -108,6 +112,72 @@ import {fun} from 'node-multicore';
 const fn = fun((a: number, b: number) => a + b);
 
 const result = await fn(1, 2); // 3
+```
+
+### Channels
+
+Channels are a way to stream data to a function and back. A channel is created
+for each function call. The channel is a duplex stream, which means you can
+write to it and read from it.
+
+
+### Dynamic CommonJs modules
+
+You can load a CommonJs module from a string. This is useful if you want to
+load a module dynamically. It is loaded into threads progressively, as the
+module concurrency rises. After you are done with the module, you can unload it.
+
+Create a CommonJs text module:
+
+```ts
+import {pool} from '..';
+
+const text = /* js */ `
+
+let state = 0;
+
+exports.add = ([a, b]) => {
+  return a + b;
+}
+
+exports.set = (value) => state = value;
+exports.get = () => state;
+
+`;
+```
+
+Load it using the `pool.js()` method:
+
+```ts
+const module = pool.cjs(text);
+```
+
+Now you can use it as any other module:
+
+```ts
+// Execute a function exported by the module
+const result = await module.exec('add', [1, 2]);
+console.log(result); // 3
+
+// Pin module to a single random thread, so multiple calls access the same state
+const pinned = module.pinned();
+await pinned.ch('set', 123).result;
+const get = await pinned.ch('get', void 0).result;
+console.log(get); // 123
+```
+
+Once you don't need this module, you can unload it:
+
+```ts
+// Unload the module, once it's no longer needed
+await module.unload();
+// await module.exec will throw an error now
+```
+
+Run a demo with the following command:
+
+```bash
+node -r ts-node/register src/demo/cjs-text.ts
 ```
 
 

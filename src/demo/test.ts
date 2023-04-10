@@ -6,7 +6,7 @@
 //
 //     or
 //
-//     node -r ts-node/register src/demo/demo.ts
+//     node -r ts-node/register src/demo/test.ts
 
 import {WorkerPool, pool as defaultPool} from '..';
 import {ok, equal, deepEqual} from 'assert';
