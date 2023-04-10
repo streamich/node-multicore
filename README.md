@@ -63,21 +63,92 @@ const result = await math.exec('add', [1, 2]); // 3
 
 ## Usage guide
 
-- The thread pool
-- Modules
-- Channels
-- Pinning a thread
-- Transferring data by ownership
-- Anonymous function modules
-- [Dynamic CommonJs modules](#dynamic-commonjs-modules)
-- Creating multicore packages
+- [The thread pool](#the-thread-pool)
+  - [The global thread pool](#the-global-thread-pool)
+  - [Creating a custom thread pool](#creating-a-custom-thread-pool)
+- [Modules](#modules)
+  - Static modules
+  - Anonymous function modules
+  - [Dynamic CommonJs modules](#dynamic-commonjs-modules)
+  - Module expressions
+- Module exports
+  - Functions
+  - Channels
+  - Promises
+  - Other exports
+- Advanced concepts
+  - Pinning a thread
+  - Transferring data by ownership
+- Multicore packages
+  - Creating `.multicore` packages
 
-### Loading a module
 
-This is the preferred way to use this library, it will load a module in the
-thread pool and you can call its exported functions.
+### The thread pool
 
-Create a module you want to be loaded in the thread pool, put it in a `module.ts` file:
+#### The global thread pool
+
+The `node-multicore` thread pool is designed to be a single shared global thread
+pool for all compute intensive NPM packages. You can import it as follows:
+
+```ts
+import {pool} from 'node-multicore';
+```
+
+The global thread pool starts with 0 threads and scales up to the number of CPUs
+less 1, as the load increases. This is a design decision as this way the global
+thread pool avoids overloading the CPU with threads. You can customize the
+minimum and maxium number of threads in the thread pool using the `MC_MIN_THREAD_POOL_SIZE`
+and `MC_MAX_THREAD_POOL_SIZE` environment variables.
+
+
+#### Creating a custom thread pool
+
+The thread pool is designed to be a shared resource, so it is not
+recommended to create your own pool. However, if you need to create a separate
+one, you can:
+
+```ts
+import {WorkerPool} from 'node-multicore';
+
+const dedicatedPool = new WorkerPool({});
+
+// Instantiate the minimum number of threads
+await dedicatedPool.init();
+```
+
+When creating a thread pool, you can pass the following options:
+
+- `min` &mdash; minimum number of threads in the pool, defaults to `0` or
+  `process.env.MC_MIN_THREAD_POOL_SIZE` environment setting.
+- `max` &mdash; maximum number of threads in the pool, defaults to the number of
+  CPUs less 1 or `process.env.MC_MAX_THREAD_POOL_SIZE` environment setting.
+- `trackUnmanagedFds` &mdash; whether to track unmanaged file descriptors in
+  worker threads and close them when the thread is terminated. Defaults to `false`.
+- `name` &mdash; name of the thread pool, used for debugging purposes. Defaults
+  to `multicore`.
+- `resourceLimits` &mdash; resource limits for worker threads.
+- `env` &mdash; environment variables for worker threads. Defaults to
+  `process.env`.
+
+
+### Modules
+
+A unit of parallelism in JavaScript is a module. You can load a module in the
+thread pool and call its exported functions.
+
+Similar to the thread pool, each module is designed to be "lazy" as well. A
+module is not loaded in any of the threads initially, but as the module
+concurrency rises, the module is gradually loaded in more worker threads.
+
+
+#### Static modules
+
+This is the preferred way to use this library, it will load a module by a global
+"specifier" `pool.module(specifier)` in the thread pool and you can call its
+exported functions.
+
+To begin, first create a module you want to be loaded in the thread pool, put it
+in a `module.ts` file:
 
 ```ts
 export const add = ([a, b]) => a + b;
@@ -86,18 +157,77 @@ export const add = ([a, b]) => a + b;
 Now add your module to the thread pool:
 
 ```ts
-import {pool} from 'node-multicore';
+import {resolve} from 'path';
 
-const filename = __dirname + '/module';
-type Methods = typeof import('./module');
-
-const module = pool.module(filename).typed<Methods>();
+const specifier = resolve(__dirname, 'module');
+const module = pool.module(specifier);
 ```
 
-You can now call the exported functions from the module:
+To add TypeScript support, you can use the `typed()` method:
 
 ```ts
-const result = await module.exec('add', [1, 2]); // 3
+const typed = module.typed<typeof import('./module')>();
+```
+
+This will create a type-safe wrapper, which knows the types of the exported
+functions. You can now call the exported functions from the module in one of the
+following ways:
+
+##### Using the `.exec()` method
+
+This will execute the function in one of the threads in the thread pool and
+return the result as a promise.
+
+```ts
+const result = await typed.exec('add', [1, 2]); // 3
+```
+
+##### Using the `.ch()` method
+
+Every function call creates a channel, which is a duplex stream (more on that
+later). By calling the `.ch()` method, you can get a reference to the channel.
+
+You can get the final result of the function call from the `.result` promise:
+
+```ts
+const result = await typed.ch('add', [1, 2]).result; // 3
+```
+
+
+##### Using the `.api()` builder
+
+You can construct an "API" object of your module using the `.api()` method.
+
+```ts
+const api = typed.api();
+```
+
+This returns an object of all the exported functions, which you can call:
+
+```ts
+const result = await api.add(1, 2).result; // 3
+```
+
+
+##### Using the `.fn()` closure
+
+To use this method you need to make sure that you module is loaded in at least
+one thread. You can achieve that by calling the `module.init()` method.
+
+```ts
+await module.init();
+```
+
+Now you can create a closure for you function
+
+```ts
+const add = typed.fn('add');
+```
+
+and run it as a function (it returns a channel)
+
+```ts
+const result = await add(1, 2).result; // 3
 ```
 
 
