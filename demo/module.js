@@ -11,3 +11,11 @@ exports.json = async (iterations = 1000) => {
   for (let i = 0; i < iterations; i++) map[i] = i;
   return JSON.stringify(map);
 };
+
+exports.stringify = (value) => {
+  return JSON.stringify(value);
+};
+
+exports.parse = (json) => {
+  return JSON.parse(json);
+};

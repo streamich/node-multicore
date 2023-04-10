@@ -126,41 +126,41 @@ in the thread pool. The results are printed to the console.
 Sample output:
 
 ```
-CPU = Apple M1 Max, Cores = 10, Max threads = 9, Node = v16.19.1, Arch = arm64, OS = darwin
+CPU = Apple M1, Cores = 8, Max threads = 7, Node = v18.15.0, Arch = arm64, OS = darwin
 Warmup ...
-Thread pool: node-multicore (concurrency = 2): 4.979s
-Thread pool: piscina (concurrency = 2): 4.992s
-Thread pool: worker-nodes (concurrency = 2): 5.003s
-Thread pool: node-multicore (concurrency = 4): 2.565s
-Thread pool: piscina (concurrency = 4): 2.611s
-Thread pool: worker-nodes (concurrency = 4): 2.563s
-Thread pool: node-multicore (concurrency = 8): 1.332s
-Thread pool: piscina (concurrency = 8): 1.354s
-Thread pool: worker-nodes (concurrency = 8): 1.345s
-Thread pool: node-multicore (concurrency = 16): 1.229s
-Thread pool: piscina (concurrency = 16): 1.302s
-Thread pool: worker-nodes (concurrency = 16): 1.285s
-Thread pool: node-multicore (concurrency = 32): 1.198s
-Thread pool: piscina (concurrency = 32): 1.298s
-Thread pool: worker-nodes (concurrency = 32): 1.278s
-Thread pool: node-multicore (concurrency = 64): 1.182s
-Thread pool: piscina (concurrency = 64): 1.312s
-Thread pool: worker-nodes (concurrency = 64): 1.278s
-Thread pool: node-multicore (concurrency = 128): 1.179s
-Thread pool: piscina (concurrency = 128): 1.299s
-Thread pool: worker-nodes (concurrency = 128): 1.274s
-Thread pool: node-multicore (concurrency = 256): 1.186s
-Thread pool: piscina (concurrency = 256): 1.296s
-Thread pool: worker-nodes (concurrency = 256): 1.273s
-Thread pool: node-multicore (concurrency = 512): 1.182s
-Thread pool: piscina (concurrency = 512): 1.301s
-Thread pool: worker-nodes (concurrency = 512): 1.328s
-Thread pool: node-multicore (concurrency = 1024): 1.188s
-Thread pool: piscina (concurrency = 1024): 1.293s
-Thread pool: worker-nodes (concurrency = 1024): 1.263s
-Thread pool: node-multicore (concurrency = 1): 9.586s
-Thread pool: piscina (concurrency = 1): 9.625s
-Thread pool: worker-nodes (concurrency = 1): 9.628s
-On main thread (concurrency = 1): 9.539s
-On main thread (concurrency = 10): 9.429s
+Thread pool: node-multicore (concurrency = 2): 5.280s
+Thread pool: piscina (concurrency = 2): 5.214s
+Thread pool: worker-nodes (concurrency = 2): 5.255s
+Thread pool: node-multicore (concurrency = 4): 3.510s
+Thread pool: piscina (concurrency = 4): 2.734s
+Thread pool: worker-nodes (concurrency = 4): 2.747s
+Thread pool: node-multicore (concurrency = 8): 2.598s
+Thread pool: piscina (concurrency = 8): 2.178s
+Thread pool: worker-nodes (concurrency = 8): 2.070s
+Thread pool: node-multicore (concurrency = 16): 2.144s
+Thread pool: piscina (concurrency = 16): 2.158s
+Thread pool: worker-nodes (concurrency = 16): 2.045s
+Thread pool: node-multicore (concurrency = 32): 1.919s
+Thread pool: piscina (concurrency = 32): 2.153s
+Thread pool: worker-nodes (concurrency = 32): 2.043s
+Thread pool: node-multicore (concurrency = 64): 1.835s
+Thread pool: piscina (concurrency = 64): 2.177s
+Thread pool: worker-nodes (concurrency = 64): 2.044s
+Thread pool: node-multicore (concurrency = 128): 1.843s
+Thread pool: piscina (concurrency = 128): 2.145s
+Thread pool: worker-nodes (concurrency = 128): 2.046s
+Thread pool: node-multicore (concurrency = 256): 1.820s
+Thread pool: piscina (concurrency = 256): 2.116s
+Thread pool: worker-nodes (concurrency = 256): 2.020s
+Thread pool: node-multicore (concurrency = 512): 1.797s
+Thread pool: piscina (concurrency = 512): 2.088s
+Thread pool: worker-nodes (concurrency = 512): 1.995s
+Thread pool: node-multicore (concurrency = 1024): 1.787s
+Thread pool: piscina (concurrency = 1024): 2.058s
+Thread pool: worker-nodes (concurrency = 1024): 2.003s
+Thread pool: node-multicore (concurrency = 1): 9.968s
+Thread pool: piscina (concurrency = 1): 9.995s
+Thread pool: worker-nodes (concurrency = 1): 10.043s
+On main thread (concurrency = 1): 9.616s
+On main thread (concurrency = 10): 9.489s
 ```

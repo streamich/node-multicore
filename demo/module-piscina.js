@@ -10,6 +10,14 @@ exports.loop = (iterations) => {
   return piscina.run(iterations, {name: 'loop'});
 };
 
-exports.json = async (iterations) => {
+exports.json = (iterations) => {
   return piscina.run(iterations, {name: 'json'});
+};
+
+exports.stringify = (value) => {
+  return piscina.run(value, {name: 'stringify'});
+};
+
+exports.parse = (json) => {
+  return piscina.run(json, {name: 'parse'});
 };

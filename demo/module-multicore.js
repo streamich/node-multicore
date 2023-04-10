@@ -8,6 +8,14 @@ exports.loop = (iterations) => {
   return mod.exec('loop', iterations);
 };
 
-exports.json = async (iterations) => {
+exports.json = (iterations) => {
   return mod.exec('json', iterations);
+};
+
+exports.stringify = (value) => {
+  return mod.exec('stringify', value);
+};
+
+exports.parse = (json) => {
+  return mod.exec('parse', json);
 };
