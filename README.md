@@ -3,25 +3,24 @@
 Parallel programming for Node.js made easy. Make any CommonJs or ESM module
 run in a thread pool.
 
-- __Global thread pool__&mdash;Node Multicore is designed to be a global shared
+- __Global thread pool:__ Node Multicore is designed to be a global shared
   thread pool for all compute intensive NPM packages.
-- Create a custom thread pool, or use a global shared one, designed to work
-  across all NPM packages.
-- Instant start&mdash;dynamic thread pool starts with 0 threads and scales up to
+- __Custom threads pools:__ create a custom thread pool, if you need to.
+- __Instant start__: dynamic thread pool starts with 0 threads and scales up to
   the number of CPU cores as the load increases.
-- Quickly load modules to the thread pool. Module concurrency is dynamic as well,
-  initially a module is not loaded in any of the threads, as the module
-  concurrency rises, the module is gradually loaded in more worker threads.
-- Channels&mdash;on each function invocation a bi-directional data channel is created
-  for that function, which allows you to stream data to the function and back.
-- Ability to pin a module to a single thread. Say, your thread holds state&mdash;
-  you can pin execution to a single thread, making subsequent method call hit
-  the same thread.
-- Quickly create a single function, which is loaded in worker threads.
-- Dead threads are automatically removed from the thread pool.
-- Fash&mdash;Node Multicore is as fast or faster as `poolifier` and `piscina`.
-- Shared thread pool&mdash;Node Multicore thread pool is designed to be a global
-  shared thread pool for all compute intensive NPM packages.
+- __Instant module loading:__ load modules to the thread pool dynamically and
+  instantly&mdash;module is loaded in more threads as the module concurrency
+  increases.
+- __Channels:__ each function invocation creates a bi-directional data channel,
+  which allows you to stream data to a worker thread and back to the main thread.
+- __Pin work to a thread:__ ability to pin a module to a single thread. Say,
+  your thread holds state&mdash;you can pin execution to a single thread, making
+  subsequent method call hit the same thread.
+- __Single function module:__ quickly create a single function modules by just
+  defining the function in your code.
+- __Dynamic thread pool:__ pool size grows as the concurrency demands grow, dead
+  threads are removed and replaced by new ones.
+- __Fash:__ Node Multicore is as fast, see benchmarks below.
 
 Table of contents:
 
@@ -259,6 +258,8 @@ const module = pool.fun((a: number, b: number) => a + b);
 Now the `module` object is just like any other module, the single function is
 exported as `default`.
 
+Note, you function cannot access any variables outside of its scope.
+
 
 ### Dynamic CommonJs modules
 
@@ -285,7 +286,7 @@ exports.get = () => state;
 `;
 ```
 
-Load it using the `pool.js()` method:
+Load it using the `pool.cjs()` method:
 
 ```ts
 const module = pool.cjs(text);
