@@ -32,7 +32,7 @@
     "lint:fix": "yarn tslint --fix",
     "tslint": "tslint 'src/**/*.{js,jsx,ts,tsx}' -t verbose --project .",
     "clean": "rimraf lib es6 es2019 es2020 esm typedocs",
-    "build": "tsc --project tsconfig.build.json --module commonjs --target es2020 --outDir lib",
+    "build": "tsc --project tsconfig.build.json --outDir lib",
     "test:all": "yarn lint && yarn test && yarn test:e2e",
     "jest": "node -r ts-node/register ./node_modules/.bin/jest --no-cache",
     "test": "yarn jest --maxWorkers 7",
