@@ -16,7 +16,7 @@ export type WPMsgWorkerReady = [type: MessageType.WorkerReady];
 export type WpMsgLoadModule = [
   type: MessageType.LoadModule,
   id: number,
-  def: WpMsgLoadDefinitionStatic | WpMsgLoadDefinitionFunc,
+  def: WpMsgLoadDefinitionStatic | WpMsgLoadDefinitionFunc | WpMsgLoadDefinitionCjsText,
 ];
 export type WpMsgModuleLoaded = [type: MessageType.ModuleLoaded, id: number, methods: string[]];
 
@@ -27,5 +27,10 @@ export interface WpMsgLoadDefinitionStatic {
 
 export interface WpMsgLoadDefinitionFunc {
   type: 'func';
+  text: string;
+}
+
+export interface WpMsgLoadDefinitionCjsText {
+  type: 'cjs';
   text: string;
 }

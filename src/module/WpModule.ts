@@ -2,10 +2,14 @@ import {go} from 'thingies';
 import {WpModuleTyped} from './WpModuleTyped';
 import {WpModuleWorkerSet} from './WpModuleWorkerSet';
 import {WpChannel} from '../channel/WpChannel';
+import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
+import {WpModuleDefinitionCjsText} from './WpModuleDefinitionCjsText';
 import type {WorkerMethodsMap} from '../worker/types';
 import type {WorkerPool} from '../WorkerPool';
 import type {WpWorker} from '../WpWorker';
 import type {TransferList, WpModuleDef} from '../types';
+import {WpModulePinned} from './WpModulePinned';
 
 let id = 0;
 
@@ -33,7 +37,12 @@ export class WpModule {
   }
 
   public async loadInWorker(worker: WpWorker): Promise<void> {
-    const methods = await worker.loadModule(this.id, this.definition);
+    const definition = this.definition;
+    const methods = await worker.loadModule(this.id, definition instanceof WpModuleDefinitionStatic
+      ? {type: 'static', specifier: definition.specifier}
+      : definition instanceof WpModuleDefinitionFunc
+        ? {type: 'func', text: definition.text}
+        : {type: 'cjs', text: (definition as WpModuleDefinitionCjsText).text});
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++) this.toId.set(methods[i], moduleWord | i);
   }
@@ -135,6 +144,12 @@ export class WpModule {
 
   public typed<Methods extends WorkerMethodsMap>(): WpModuleTyped<Methods> {
     return new WpModuleTyped(this);
+  }
+
+  public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
+    const worker = this.workers.worker();
+    if (!worker) throw new Error('NO_WORKER');
+    return new WpModulePinned(this, worker);
   }
 
   public removeWorker(worker: WpWorker): void {

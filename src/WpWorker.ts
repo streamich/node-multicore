@@ -7,11 +7,9 @@ import type {
   WpMsgResponse,
   WpMsgLoadModule,
   WpMsgChannelData,
-  WpModuleDef,
   WpMessage,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
-import {WpModuleDefinitionStatic} from './module/WpModuleDefinitionStatic';
 import {MessageType} from './message/constants';
 
 const fileName = resolve(__dirname, 'worker', 'main');
@@ -56,14 +54,12 @@ export class WpWorker {
    * Load a module in this worker.
    * @param module Module to load.
    */
-  public async loadModule(id: number, definition: WpModuleDef): Promise<string[]> {
+  public async loadModule(id: number, definition: WpMsgLoadModule[2]): Promise<string[]> {
     const worker = this.worker;
     const msg: WpMsgLoadModule = [
       MessageType.LoadModule,
       id,
-      definition instanceof WpModuleDefinitionStatic
-        ? {type: 'static', specifier: definition.specifier}
-        : {type: 'func', text: definition.text},
+      definition,
     ];
     worker.postMessage(msg);
     const methods = await new Promise<string[]>((resolve) => {
@@ -154,7 +150,7 @@ export class WpWorker {
     msg[2] = id;
     msg[3] = req;
     worker.postMessage(msg, transferList);
-    msg[3] = null;
+    msg[3] = undefined;
   }
 
   public async shutdown(): Promise<void> {

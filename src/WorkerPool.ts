@@ -7,6 +7,7 @@ import {sha256} from './util/sha';
 import {WpModuleDefinitionFunc} from './module/WpModuleDefinitionFunc';
 import {WorkerCh, WorkerFn} from './worker/types';
 import {WpChannelAllocator} from './channel/WpChannelAllocator';
+import {WpModuleDefinitionCjsText} from './module/WpModuleDefinitionCjsText';
 import type {WorkerOptions} from 'worker_threads';
 
 export interface WorkerPoolOptions {
@@ -114,6 +115,16 @@ export class WorkerPool {
     const existingModule = this.modules.get(specifier);
     if (existingModule) return existingModule;
     const definition = new WpModuleDefinitionFunc(specifier, text);
+    const module = new WpModule(this, definition);
+    this.modules.set(specifier, module);
+    return module;
+  }
+
+  public cjs(text: string): WpModule {
+    const specifier = sha256(text);
+    const existingModule = this.modules.get(specifier);
+    if (existingModule) return existingModule;
+    const definition = new WpModuleDefinitionCjsText(specifier, text);
     const module = new WpModule(this, definition);
     this.modules.set(specifier, module);
     return module;

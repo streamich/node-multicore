@@ -44,9 +44,7 @@ export class WpModuleTyped<Methods extends WorkerMethodsMap> {
 
   /** Returns API of this module, which is pinned to one worker. */
   public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
-    const worker = this.module.workers.worker();
-    if (!worker) throw new Error('NO_WORKER');
-    return new WpModulePinned(this.module, worker);
+    return this.module.pinned<Methods>();
   }
 }
 

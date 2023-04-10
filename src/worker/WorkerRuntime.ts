@@ -2,6 +2,7 @@ import {WorkerResponse} from './WorkerResponse';
 import {MessageType} from '../message/constants';
 import {WorkerModuleStatic} from './WorkerModuleStatic';
 import {WorkerModuleFunction} from './WorkerModuleFunction';
+import {WorkerModuleCjsText} from './WorkerModuleCjsText';
 import type {MessagePort} from 'worker_threads';
 import type {
   TransferList,
@@ -109,14 +110,17 @@ export class WorkerRuntime {
 
   /** Load a module in this worker thread. */
   protected async onLoadModule([, id, def]: WpMsgLoadModule) {
-    const module =
-      def.type === 'static' ? new WorkerModuleStatic(id, def.specifier) : new WorkerModuleFunction(id, def.text);
+    const module = def.type === 'static'
+      ? new WorkerModuleStatic(id, def.specifier)
+      : def.type === 'func'
+        ? new WorkerModuleFunction(id, def.text)
+        : new WorkerModuleCjsText(id, def.text);
     await module.load();
     const table = module.table();
     for (const [, id, fn] of table)
       this.wrappers.set(
         id,
-        fn.length === 1
+        fn.length <= 1
           ? (seq, data) => this.fn(fn as WorkerFn, seq, data)
           : (seq, data) => this.ch(fn as WorkerCh, seq, data),
       );
@@ -133,7 +137,7 @@ export class WorkerRuntime {
     RESPONSE[1] = seq;
     RESPONSE[2] = response;
     this.port.postMessage(RESPONSE, transferList);
-    RESPONSE[2] = null;
+    RESPONSE[2] = undefined;
   }
 
   protected sendError(seq: number, error: unknown): void {
