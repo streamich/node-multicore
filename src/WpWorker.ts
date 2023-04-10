@@ -15,6 +15,7 @@ import type {
   WorkerData,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
+import {decoder} from './memory/codec';
 
 const fileName = resolve(__dirname, 'worker', 'main');
 
@@ -42,7 +43,11 @@ export class WpWorker {
       workerData,
     };
     this.worker = new Worker(fileName, workerOptions);
-    this.memory.onLargeMessage = () => {};
+    this.memory.onUnableToSend = (msg) => {
+      // TODO: Remove this decoding....
+      const msgDecoded = decoder.decode(msg);
+      this.worker.postMessage(msgDecoded);
+    };
   }
 
   public tasks(): number {

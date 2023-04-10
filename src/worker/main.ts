@@ -1,4 +1,4 @@
-import {isMainThread, parentPort, workerData} from 'worker_threads';
+import {isMainThread, parentPort, workerData, threadId} from 'worker_threads';
 import {WorkerRuntime} from './WorkerRuntime';
 import {MemoryChannel} from '../memory/MemoryChannel';
 import {MemoryPort} from '../memory/MemoryPort';
@@ -10,6 +10,6 @@ const wd = workerData as WorkerData;
 const incoming = new MemoryPort(wd.memory.outgoingSlots, wd.memory.outgoing);
 const outgoing = new MemoryPort(wd.memory.incomingSlots, wd.memory.incoming);
 const memory = new MemoryChannel(incoming, outgoing);
-const runtime = new WorkerRuntime(parentPort!, memory);
+const runtime = new WorkerRuntime(threadId, parentPort!, memory);
 
 runtime.sendReady();

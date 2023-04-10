@@ -9,7 +9,7 @@ export class MemoryChannel {
     return new MemoryChannel(MemoryPort.create(), MemoryPort.create());
   }
 
-  public onLargeMessage: Send = () => {};
+  public onUnableToSend: Send = () => {};
 
   protected readonly writer: MemoryPortWriter;
   protected readonly encoder: CborEncoder;
@@ -37,17 +37,15 @@ export class MemoryChannel {
     const {encoder, writer} = this;
     writer.reset();
     encoder.writeAny(copy);
-    const slot = writer.flushSlot();
+    const slot = writer.slot;
     if (slot) slot.send();
-    else this.onLargeMessage(writer.flush());
+    else this.onUnableToSend(writer.flush());
   }
 
   public store(copy: unknown): MemoryPortSlot | Uint8Array {
     const {encoder, writer} = this;
     writer.reset();
     encoder.writeAny(copy);
-    const slot = writer.flushSlot();
-    if (slot) return slot;
-    return writer.flush();
+    return writer.slot || writer.flush();
   }
 }

@@ -1,8 +1,9 @@
 export const enum MemoryPortSizing {
-  HeaderSize = 4 * 2,
+  HeaderWordSize = 4,
+  HeaderSize = HeaderWordSize * 2,
 }
 
 export const enum HeaderIndex {
-  Send = 0,
-  Ack = 1,
+  Lock = 0,
+  Send = 1,
 }

@@ -34,9 +34,15 @@ export class MemoryPort {
     const length = slots.length;
     for (let i = 0; i < length; i++) {
       const slot = slots[i];
-      if (!slot.locked && slot.body.byteLength >= minSize) return slot;
+      if (slot.body.byteLength >= minSize && !slot.isLocked()) return slot;
     }
     return undefined;
+  }
+
+  public acquire(minSize: number): MemoryPortSlot | undefined {
+    const slot = this.find(minSize);
+    if (slot) slot.lock();
+    return slot;
   }
   
   public subscribe(): void {
@@ -44,9 +50,9 @@ export class MemoryPort {
   }
 
   private subscribeSlot(slot: MemoryPortSlot): void {
-    slot.receive().then((data) => {
-      this.onmessage(data);
-      this.subscribeSlot(slot);
-    });
+    slot.receive()
+      .then((data) => this.onmessage(data))
+      .catch(() => {})
+      .finally(() => this.subscribeSlot(slot));
   }
 }

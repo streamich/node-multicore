@@ -46,7 +46,7 @@ export class WorkerRuntime {
     }
   };
 
-  constructor(protected readonly port: MessagePort, protected readonly memory: MemoryChannel) {
+  constructor(public readonly id: number, protected readonly port: MessagePort, protected readonly memory: MemoryChannel) {
     this.port.on('message', this.onmessage);
     memory.subscribe(this.onmessage);
   }
