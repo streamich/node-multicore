@@ -9,6 +9,7 @@ import {WorkerCh, WorkerFn} from './worker/types';
 import {WpChannelAllocator} from './channel/WpChannelAllocator';
 import {WpModuleDefinitionCjsText} from './module/WpModuleDefinitionCjsText';
 import type {WorkerOptions} from 'worker_threads';
+import type {WpModuleTyped} from './module/WpModuleTyped';
 
 export interface WorkerPoolOptions {
   /** Minimum number of worker threads to maintain. */
@@ -109,15 +110,15 @@ export class WorkerPool {
     return module;
   }
 
-  public fun(fn: WorkerFn<any, any> | WorkerCh<any, any, any, any>): WpModule {
+  public fun<F extends WorkerFn<any, any> | WorkerCh<any, any, any, any>>(fn: F): WpModuleTyped<{default: F}> {
     const text = fn.toString();
     const specifier = sha256(text);
     const existingModule = this.modules.get(specifier);
-    if (existingModule) return existingModule;
+    if (existingModule) return existingModule.typed();
     const definition = new WpModuleDefinitionFunc(specifier, text);
     const module = new WpModule(this, definition);
     this.modules.set(specifier, module);
-    return module;
+    return module.typed<{default: F}>();
   }
 
   public cjs(text: string): WpModule {
