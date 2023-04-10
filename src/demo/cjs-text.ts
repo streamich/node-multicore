@@ -1,3 +1,4 @@
+/* tslint:disable no-console */
 // node -r ts-node/register src/demo/cjs-text.ts
 
 import {pool} from '..';
