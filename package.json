@@ -36,7 +36,7 @@
     "test:all": "yarn lint && yarn test && yarn test:e2e",
     "jest": "node -r ts-node/register ./node_modules/.bin/jest --no-cache",
     "test": "yarn jest --maxWorkers 7",
-    "test:ci": "yarn jest --maxWorkers 3",
+    "test:ci": "yarn jest --maxWorkers 1",
     "test:e2e": "node -r ts-node/register src/demo/test.ts",
     "demo": "yarn build && node demo"
   },
