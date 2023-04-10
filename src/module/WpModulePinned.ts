@@ -1,8 +1,8 @@
-import {WpChannel} from './WpChannel';
+import {WpChannel} from '../channel/WpChannel';
 import type {WpModule} from './WpModule';
-import type {TransferList} from './types';
-import type {WorkerCh, WorkerMethod, WorkerMethodsMap} from './worker/types';
-import type {WpWorker} from './WpWorker';
+import type {TransferList} from '../types';
+import type {WorkerCh, WorkerMethod, WorkerMethodsMap} from '../worker/types';
+import type {WpWorker} from '../WpWorker';
 
 /** Module pinned to a single worker. */
 export class WpModulePinned<Methods extends WorkerMethodsMap> {

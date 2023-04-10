@@ -1,11 +1,15 @@
 import {go} from 'thingies';
 import {WpModuleTyped} from './WpModuleTyped';
 import {WpModuleWorkerSet} from './WpModuleWorkerSet';
-import {WpChannel} from './WpChannel';
-import type {WorkerMethodsMap} from './worker/types';
-import type {WorkerPool} from './WorkerPool';
-import type {WpWorker} from './WpWorker';
-import type {TransferList, WpModuleDef} from './types';
+import {WpChannel} from '../channel/WpChannel';
+import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
+import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
+import {WpModuleDefinitionCjsText} from './WpModuleDefinitionCjsText';
+import {WpModulePinned} from './WpModulePinned';
+import type {WorkerMethodsMap} from '../worker/types';
+import type {WorkerPool} from '../WorkerPool';
+import type {WpWorker} from '../WpWorker';
+import type {TransferList, WpModuleDef} from '../types';
 
 let id = 0;
 
@@ -32,8 +36,21 @@ export class WpModule {
     return this;
   }
 
+  public async unload(): Promise<void> {
+    this.pool.modules.delete(this.definition.specifier);
+    await Promise.allSettled([
+      ...this.workers.workers.map((worker) => worker.unloadModule(this.id)),
+      ...this.workers.pendingWorkers.map((worker$) => worker$.then((worker) => worker.unloadModule(this.id))),
+    ]);
+  }
+
   public async loadInWorker(worker: WpWorker): Promise<void> {
-    const methods = await worker.loadModule(this.id, this.definition);
+    const definition = this.definition;
+    const methods = await worker.loadModule(this.id, definition instanceof WpModuleDefinitionStatic
+      ? {type: 'static', specifier: definition.specifier}
+      : definition instanceof WpModuleDefinitionFunc
+        ? {type: 'func', text: definition.text}
+        : {type: 'cjs', text: (definition as WpModuleDefinitionCjsText).text});
     const moduleWord = this.id << 16;
     for (let i = 0; i < methods.length; i++) this.toId.set(methods[i], moduleWord | i);
   }
@@ -135,6 +152,12 @@ export class WpModule {
 
   public typed<Methods extends WorkerMethodsMap>(): WpModuleTyped<Methods> {
     return new WpModuleTyped(this);
+  }
+
+  public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
+    const worker = this.workers.worker();
+    if (!worker) throw new Error('NO_WORKER');
+    return new WpModulePinned(this, worker);
   }
 
   public removeWorker(worker: WpWorker): void {

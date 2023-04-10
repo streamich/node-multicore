@@ -1,18 +1,16 @@
 import {resolve} from 'path';
 import {Worker, type WorkerOptions} from 'worker_threads';
-import {WpChannel} from './WpChannel';
+import {WpChannel} from './channel/WpChannel';
 import type {
   TransferList,
   WpMsgError,
-  WpMsgRequest,
   WpMsgResponse,
   WpMsgLoadModule,
   WpMsgChannelData,
-  WpModuleDef,
   WpMessage,
+  WpMsgUnloadModule,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
-import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 import {MessageType} from './message/constants';
 
 const fileName = resolve(__dirname, 'worker', 'main');
@@ -57,14 +55,12 @@ export class WpWorker {
    * Load a module in this worker.
    * @param module Module to load.
    */
-  public async loadModule(id: number, definition: WpModuleDef): Promise<string[]> {
+  public async loadModule(id: number, definition: WpMsgLoadModule[2]): Promise<string[]> {
     const worker = this.worker;
     const msg: WpMsgLoadModule = [
       MessageType.LoadModule,
       id,
-      definition instanceof WpModuleDefinitionStatic
-        ? {type: 'static', specifier: definition.specifier}
-        : {type: 'func', text: definition.text},
+      definition,
     ];
     worker.postMessage(msg);
     const methods = await new Promise<string[]>((resolve) => {
@@ -82,7 +78,19 @@ export class WpWorker {
   }
 
   public async unloadModule(id: number): Promise<void> {
-    throw new Error('Not implemented');
+    const msg: WpMsgUnloadModule = [MessageType.UnloadModule, id];
+    const worker = this.worker;
+    worker.postMessage(msg);
+    await new Promise<void>((resolve) => {
+      const onmessage = (msg: WpMessage) => {
+        if (msg[0] !== MessageType.ModuleUnloaded) return;
+        const [, moduleId] = msg;
+        if (moduleId !== id) return;
+        worker.off('message', onmessage);
+        resolve();
+      };
+      worker.on('message', onmessage);
+    });
   }
 
   private onmessage = (msg: WpMessage): void => {
@@ -155,7 +163,7 @@ export class WpWorker {
     msg[2] = id;
     msg[3] = req;
     worker.postMessage(msg, transferList);
-    msg[3] = null;
+    msg[3] = undefined;
   }
 
   public async shutdown(): Promise<void> {

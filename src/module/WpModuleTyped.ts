@@ -1,8 +1,8 @@
 import {WpModulePinned} from './WpModulePinned';
 import type {WpModule} from './WpModule';
-import type {TransferList} from './types';
-import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from './worker/types';
-import type {WpChannel} from './WpChannel';
+import type {TransferList} from '../types';
+import type {WorkerCh, WorkerFn, WorkerMethod, WorkerMethodsMap} from '../worker/types';
+import type {WpChannel} from '../channel/WpChannel';
 
 export class WpModuleTyped<Methods extends WorkerMethodsMap> {
   constructor(protected readonly module: WpModule) {}
@@ -44,9 +44,7 @@ export class WpModuleTyped<Methods extends WorkerMethodsMap> {
 
   /** Returns API of this module, which is pinned to one worker. */
   public pinned<Methods extends WorkerMethodsMap>(): WpModulePinned<Methods> {
-    const worker = this.module.workers.worker();
-    if (!worker) throw new Error('NO_WORKER');
-    return new WpModulePinned(this.module, worker);
+    return this.module.pinned<Methods>();
   }
 }
 

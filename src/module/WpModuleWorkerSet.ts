@@ -1,7 +1,7 @@
 import {Defer, mutex} from 'thingies';
-import type {WorkerPool} from './WorkerPool';
+import type {WorkerPool} from '../WorkerPool';
 import type {WpModule} from './WpModule';
-import type {WpWorker} from './WpWorker';
+import type {WpWorker} from '../WpWorker';
 
 /**
  * Tracks worker thread set in which current modules has been loaded. This
@@ -16,6 +16,14 @@ export class WpModuleWorkerSet {
   protected nextWorker: number = 0;
 
   constructor(protected readonly pool: WorkerPool, protected readonly module: WpModule) {}
+
+  public get workers(): WpWorker[] {
+    return this.workers2;
+  }
+
+  public get pendingWorkers(): Promise<WpWorker>[] {
+    return [...this.newWorkers];
+  }
 
   public size(): number {
     return this.workers2.length;
