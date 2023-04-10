@@ -5,8 +5,7 @@ run in a thread pool.
 
 - __Global thread pool:__ designed to be a shared thread pool for all NPM packages.
 - __Custom threads pools:__ create a custom thread pool, if you need to.
-- __Instant start__: dynamic thread pool starts with 0 threads and scales up to
-  the number of CPU cores as the load increases.
+- __Instant start__: starts with 0 threads and scales as the load increases.
 - __Instant module loading:__ load modules to the thread pool dynamically and
   instantly&mdash;module is loaded in more threads as the module concurrency
   increases.
@@ -20,7 +19,7 @@ run in a thread pool.
 - __Dynamic:__ pool size grows as the concurrency rises, dead threads are replaced by new ones.
 - __Fast:__ Node Multicore is as fast, see benchmarks below.
 
-Table of contents:
+### Table of contents
 
 - [Getting started](#getting-started)
 - [The thread pool](#the-thread-pool)
@@ -39,8 +38,7 @@ Table of contents:
 - [Advanced concepts](#advanced-concepts)
   - [Pinning a thread](#pinning-a-thread)
   - [Transferring data by ownership](#transferring-data-by-ownership)
-- Multicore packages
-  - Creating `.multicore` packages
+- [Multicore packages](#multicore-packages)
 - [Demo / Benchmark](#demo--benchmark)
 
 
@@ -384,7 +382,7 @@ All other exports are returned to the main thread as is, using the `postMessage`
 copy algorithm.
 
 
-## Advanced topics
+## Advanced concepts
 
 ### Pinning a thread
 
@@ -443,6 +441,34 @@ export const method = (params, send, recv) => {
   send(123, [buffer1, buffer2, buffer3]);
   send(456, [buffer4, buffer5, buffer6]);
   return 123;
+};
+```
+
+
+## Multicore packages
+
+Use this shared thread pool to improve performance of compute intensive NPM
+packages. Say, there is a package `foo` which performs some heavy computations.
+Create a new package `foo.multicore` and use this library to improve performance
+of the `foo` package.
+
+`module.ts`:
+
+```ts
+import {foo as fooNative} from 'foo';
+
+export const foo = (params) => fooNative(...params);
+```
+
+`index.ts`:
+
+```ts
+import {pool} from 'node-multicore';
+
+const typed = pool.module(__dirname + '/module').typed<typeof import('./module')>();
+
+export const foo = async (...params) => {
+  return await typed.call('foo', params);
 };
 ```
 
