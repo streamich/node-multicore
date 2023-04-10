@@ -3,8 +3,7 @@
 Parallel programming for Node.js made easy. Make any CommonJs or ESM module
 run in a thread pool.
 
-- __Global thread pool:__ Node Multicore is designed to be a global shared
-  thread pool for all compute intensive NPM packages.
+- __Global thread pool:__ designed to be a shared thread pool for all NPM packages.
 - __Custom threads pools:__ create a custom thread pool, if you need to.
 - __Instant start__: dynamic thread pool starts with 0 threads and scales up to
   the number of CPU cores as the load increases.
@@ -18,9 +17,8 @@ run in a thread pool.
   subsequent method call hit the same thread.
 - __Single function module:__ quickly create a single function modules by just
   defining the function in your code.
-- __Dynamic thread pool:__ pool size grows as the concurrency demands grow, dead
-  threads are removed and replaced by new ones.
-- __Fash:__ Node Multicore is as fast, see benchmarks below.
+- __Dynamic:__ pool size grows as the concurrency rises, dead threads are replaced by new ones.
+- __Fast:__ Node Multicore is as fast, see benchmarks below.
 
 Table of contents:
 
@@ -33,11 +31,11 @@ Table of contents:
   - [Single function modules](#single-function-modules)
   - [Dynamic CommonJs modules](#dynamic-commonjs-modules)
   - [*Module Expressions*](#module-expressions)
-- Module exports
-  - Functions
-  - Channels
-  - Promises
-  - Other exports
+- [Module exports](#module-exports)
+  - [Functions](#functions)
+  - [Channels](#channels)
+  - [Promises](#promises)
+  - [Other exports](#other-exports)
 - Advanced concepts
   - Pinning a thread
   - Transferring data by ownership
@@ -70,10 +68,10 @@ Load your module from the main thread
 import {resolve} from 'path';
 import {pool} from 'node-multicore';
 
-const path = resolve(__dirname, 'module');
+const specifier = resolve(__dirname, 'module');
 type Methods = typeof import('./module');
 
-const math = pool.module(path).typed<Methods>();
+const math = pool.module(specifier).typed<Methods>();
 ```
 
 Now call your methods from the main thread
@@ -329,11 +327,61 @@ copied to other threads. This library will support this proposal once it is
 implemented in Node.js.
 
 
-## Channels
+## Module exports
 
-Channels are a way to stream data to a function and back. A channel is created
-for each function call. The channel is a duplex stream, which means you can
-write to it and read from it.
+Modules are loaded in worker threads and their exports become available in the
+main thread. Below we describe how different types of exports are handled.
+
+
+### Functions
+
+The most common export is a function, which receives a single "payload" argument.
+The function can be async as well as synchronous. The return value of the function
+is sent back to the main thread.
+
+```ts
+import {WorkerFn} from 'node-multicore';
+
+export const add: WorkerFn<[a: number, b: number], number> = ([a, b]) => {
+  return a + b;
+};
+```
+
+
+### Channels
+
+Channels are functions, which accept 2 or 3 arguments. The first argument is a
+"payload" argument, which is the same as for regular functions. The next two
+arguments are "send" and "receive" methods, which can be used to send and receive
+data from the main thread.
+
+```ts
+import {WorkerCh, taker} from 'node-multicore';
+
+export const addThreeNumbers: WorkerCh<number, number, number, void> = async (one, send, recv) => {
+  const take = taker(recv);
+  const two = await take();
+  const three = await take();
+  return one + two + three;
+};
+```
+
+The channel is open until the function returns. You can use the `taker()` helper
+to create a function, which will wait for the next value from the channel.
+
+
+### Promises
+
+If module exports a promise, when called from the main thread the promise will
+be resolved first and then: (1) if the promise resolves to a function, the
+function will be called with the payload argument, (2) if the promise resolves
+to anything else, the value will be returned.
+
+
+### Other exports
+
+All other exports are returned to the main thread as is, using the `postMessage`
+copy algorithm.
 
 
 ## Demo / Benchmark
