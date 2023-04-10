@@ -31,3 +31,15 @@ test('cjs module can store state', async () => {
   const res3 = await pinned.ch('get', void 0).result;
   expect(res3).toBe(2);
 });
+
+test('can unload the module', async () => {
+  const result = await module.exec('add', [1, 2]);
+  expect(result).toEqual(3);
+  await module.unload();
+  try {
+    await module.exec('add', [1, 2])
+    throw new Error('not this');
+  } catch (error) {
+    expect(error).toBe('FN_404');
+  }
+});

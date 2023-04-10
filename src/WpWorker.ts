@@ -8,6 +8,7 @@ import type {
   WpMsgLoadModule,
   WpMsgChannelData,
   WpMessage,
+  WpMsgUnloadModule,
 } from './types';
 import type {WorkerPool} from './WorkerPool';
 import {MessageType} from './message/constants';
@@ -77,7 +78,19 @@ export class WpWorker {
   }
 
   public async unloadModule(id: number): Promise<void> {
-    throw new Error('Not implemented');
+    const msg: WpMsgUnloadModule = [MessageType.UnloadModule, id];
+    const worker = this.worker;
+    worker.postMessage(msg);
+    await new Promise<void>((resolve) => {
+      const onmessage = (msg: WpMessage) => {
+        if (msg[0] !== MessageType.ModuleUnloaded) return;
+        const [, moduleId] = msg;
+        if (moduleId !== id) return;
+        worker.off('message', onmessage);
+        resolve();
+      };
+      worker.on('message', onmessage);
+    });
   }
 
   private onmessage = (msg: WpMessage): void => {

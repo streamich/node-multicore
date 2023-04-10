@@ -7,4 +7,5 @@ export const enum MessageType {
   LoadModule,
   ModuleLoaded,
   UnloadModule,
+  ModuleUnloaded,
 }

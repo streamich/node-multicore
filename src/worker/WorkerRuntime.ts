@@ -16,6 +16,8 @@ import type {
   WpMsgChannelData,
   WpSend,
   WpRecv,
+  WpMsgUnloadModule,
+  WpMsgModuleUnloaded,
 } from '../types';
 import type {WorkerFn, WorkerCh, WorkerModule} from './types';
 
@@ -43,6 +45,10 @@ export class WorkerRuntime {
         this.onLoadModule(msg);
         break;
       }
+      case MessageType.UnloadModule: {
+        this.onUnloadModule(msg);
+        break;
+      }
     }
   };
 
@@ -52,7 +58,10 @@ export class WorkerRuntime {
 
   protected onRequest([, seq, method, data]: WpMsgRequest): void {
     const wrapper = this.wrappers.get(method);
-    if (!wrapper) return;
+    if (!wrapper) {
+      this.sendError(seq, 'FN_404');
+      return;
+    }
     wrapper(seq, data);
   }
 
@@ -116,6 +125,7 @@ export class WorkerRuntime {
         ? new WorkerModuleFunction(id, def.text)
         : new WorkerModuleCjsText(id, def.text);
     await module.load();
+    this.modules.set(id, module);
     const table = module.table();
     for (const [, id, fn] of table)
       this.wrappers.set(
@@ -126,6 +136,19 @@ export class WorkerRuntime {
       );
     const response: WpMsgModuleLoaded = [MessageType.ModuleLoaded, id, table.map(([method]) => method)];
     this.port.postMessage(response);
+  }
+
+  protected async onUnloadModule([, id]: WpMsgUnloadModule) {
+    try {
+      const module = this.modules.get(id);
+      if (!module) return;
+      this.modules.delete(id);
+      module.table().forEach(([, id]) => this.wrappers.delete(id));
+      await module.unload();
+    } finally {
+      const response: WpMsgModuleUnloaded = [MessageType.ModuleUnloaded, id];
+      this.port.postMessage(response);
+    }
   }
 
   protected sendResponse<Response>(seq: number, response: Response | WorkerResponse<Response>): void {

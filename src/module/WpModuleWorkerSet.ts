@@ -17,6 +17,14 @@ export class WpModuleWorkerSet {
 
   constructor(protected readonly pool: WorkerPool, protected readonly module: WpModule) {}
 
+  public get workers(): WpWorker[] {
+    return this.workers2;
+  }
+
+  public get pendingWorkers(): Promise<WpWorker>[] {
+    return [...this.newWorkers];
+  }
+
   public size(): number {
     return this.workers2.length;
   }

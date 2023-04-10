@@ -5,11 +5,11 @@ import {WpChannel} from '../channel/WpChannel';
 import {WpModuleDefinitionStatic} from './WpModuleDefinitionStatic';
 import {WpModuleDefinitionFunc} from './WpModuleDefinitionFunc';
 import {WpModuleDefinitionCjsText} from './WpModuleDefinitionCjsText';
+import {WpModulePinned} from './WpModulePinned';
 import type {WorkerMethodsMap} from '../worker/types';
 import type {WorkerPool} from '../WorkerPool';
 import type {WpWorker} from '../WpWorker';
 import type {TransferList, WpModuleDef} from '../types';
-import {WpModulePinned} from './WpModulePinned';
 
 let id = 0;
 
@@ -34,6 +34,14 @@ export class WpModule {
   public async init(): Promise<this> {
     await this.workers.init();
     return this;
+  }
+
+  public async unload(): Promise<void> {
+    this.pool.modules.delete(this.definition.specifier);
+    await Promise.allSettled([
+      ...this.workers.workers.map((worker) => worker.unloadModule(this.id)),
+      ...this.workers.pendingWorkers.map((worker$) => worker$.then((worker) => worker.unloadModule(this.id))),
+    ]);
   }
 
   public async loadInWorker(worker: WpWorker): Promise<void> {
