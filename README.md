@@ -3,25 +3,43 @@
 Parallel programming for Node.js made easy. Make any CommonJs or ESM module
 run in a thread pool.
 
-- __Global thread pool__&mdash;Node Multicore is designed to be a global shared
-  thread pool for all compute intensive NPM packages.
-- Create a custom thread pool, or use a global shared one, designed to work
-  across all NPM packages.
-- Instant start&mdash;dynamic thread pool starts with 0 threads and scales up to
-  the number of CPU cores as the load increases.
-- Quickly load modules to the thread pool. Module concurrency is dynamic as well,
-  initially a module is not loaded in any of the threads, as the module
-  concurrency rises, the module is gradually loaded in more worker threads.
-- Channels&mdash;on each function invocation a bi-directional data channel is created
-  for that function, which allows you to stream data to the function and back.
-- Ability to pin a module to a single thread. Say, your thread holds state&mdash;
-  you can pin execution to a single thread, making subsequent method call hit
-  the same thread.
-- Quickly create a single function, which is loaded in worker threads.
-- Dead threads are automatically removed from the thread pool.
-- Fash&mdash;Node Multicore is as fast or faster as `poolifier` and `piscina`.
-- Shared thread pool&mdash;Node Multicore thread pool is designed to be a global
-  shared thread pool for all compute intensive NPM packages.
+- __Global thread pool:__ designed to be a shared thread pool for all NPM packages.
+- __Custom threads pools:__ create a custom thread pool, if you need to.
+- __Instant start__: starts with 0 threads and scales as the load increases.
+- __Instant module loading:__ load modules to the thread pool dynamically and
+  instantly&mdash;module is loaded in more threads as the module concurrency
+  increases.
+- __Channels:__ each function invocation creates a bi-directional data channel,
+  which allows you to stream data to a worker thread and back to the main thread.
+- __Pin work to a thread:__ ability to pin a module to a single thread. Say,
+  your thread holds state&mdash;you can pin execution to a single thread, making
+  subsequent method call hit the same thread.
+- __Single function module:__ quickly create a single function modules by just
+  defining the function in your code.
+- __Dynamic:__ pool size grows as the concurrency rises, dead threads are replaced by new ones.
+- __Fast:__ Node Multicore is as fast, see benchmarks below.
+
+### Table of contents
+
+- [Getting started](#getting-started)
+- [The thread pool](#the-thread-pool)
+  - [The global thread pool](#the-global-thread-pool)
+  - [Creating a custom thread pool](#creating-a-custom-thread-pool)
+- [Modules](#modules)
+  - [Static modules](#static-modules)
+  - [Single function modules](#single-function-modules)
+  - [Dynamic CommonJs modules](#dynamic-commonjs-modules)
+  - [*Module Expressions*](#module-expressions)
+- [Module exports](#module-exports)
+  - [Functions](#functions)
+  - [Channels](#channels)
+  - [Promises](#promises)
+  - [Other exports](#other-exports)
+- [Advanced concepts](#advanced-concepts)
+  - [Pinning a thread](#pinning-a-thread)
+  - [Transferring data by ownership](#transferring-data-by-ownership)
+- [Multicore packages](#multicore-packages)
+- [Demo / Benchmark](#demo--benchmark)
 
 
 ## Getting started
@@ -48,10 +66,10 @@ Load your module from the main thread
 import {resolve} from 'path';
 import {pool} from 'node-multicore';
 
-const path = resolve(__dirname, 'module');
+const specifier = resolve(__dirname, 'module');
 type Methods = typeof import('./module');
 
-const math = pool.module(path).typed<Methods>();
+const math = pool.module(specifier).typed<Methods>();
 ```
 
 Now call your methods from the main thread
@@ -61,23 +79,72 @@ const result = await math.exec('add', [1, 2]); // 3
 ```
 
 
-## Usage guide
+## The thread pool
 
-- The thread pool
-- Modules
-- Channels
-- Pinning a thread
-- Transferring data by ownership
-- Anonymous function modules
-- [Dynamic CommonJs modules](#dynamic-commonjs-modules)
-- Creating multicore packages
+### The global thread pool
 
-### Loading a module
+The `node-multicore` thread pool is designed to be a single shared global thread
+pool for all compute intensive NPM packages. You can import it as follows:
 
-This is the preferred way to use this library, it will load a module in the
-thread pool and you can call its exported functions.
+```ts
+import {pool} from 'node-multicore';
+```
 
-Create a module you want to be loaded in the thread pool, put it in a `module.ts` file:
+The global thread pool starts with 0 threads and scales up to the number of CPUs
+less 1, as the load increases. This is a design decision as this way the global
+thread pool avoids overloading the CPU with threads. You can customize the
+minimum and maxium number of threads in the thread pool using the `MC_MIN_THREAD_POOL_SIZE`
+and `MC_MAX_THREAD_POOL_SIZE` environment variables.
+
+
+### Creating a custom thread pool
+
+The thread pool is designed to be a shared resource, so it is not
+recommended to create your own pool. However, if you need to create a separate
+one, you can:
+
+```ts
+import {WorkerPool} from 'node-multicore';
+
+const dedicatedPool = new WorkerPool({});
+
+// Instantiate the minimum number of threads
+await dedicatedPool.init();
+```
+
+When creating a thread pool, you can pass the following options:
+
+- `min` &mdash; minimum number of threads in the pool, defaults to `0` or
+  `process.env.MC_MIN_THREAD_POOL_SIZE` environment setting.
+- `max` &mdash; maximum number of threads in the pool, defaults to the number of
+  CPUs less 1 or `process.env.MC_MAX_THREAD_POOL_SIZE` environment setting.
+- `trackUnmanagedFds` &mdash; whether to track unmanaged file descriptors in
+  worker threads and close them when the thread is terminated. Defaults to `false`.
+- `name` &mdash; name of the thread pool, used for debugging purposes. Defaults
+  to `multicore`.
+- `resourceLimits` &mdash; resource limits for worker threads.
+- `env` &mdash; environment variables for worker threads. Defaults to
+  `process.env`.
+
+
+## Modules
+
+A unit of parallelism in JavaScript is a module. You can load a module in the
+thread pool and call its exported functions.
+
+Similar to the thread pool, each module is designed to be "lazy" as well. A
+module is not loaded in any of the threads initially, but as the module
+concurrency rises, the module is gradually loaded in more worker threads.
+
+
+### Static modules
+
+This is the preferred way to use this library, it will load a module by a global
+"specifier" `pool.module(specifier)` in the thread pool and you can call its
+exported functions.
+
+To begin, first create a module you want to be loaded in the thread pool, put it
+in a `module.ts` file:
 
 ```ts
 export const add = ([a, b]) => a + b;
@@ -86,25 +153,84 @@ export const add = ([a, b]) => a + b;
 Now add your module to the thread pool:
 
 ```ts
-import {pool} from 'node-multicore';
+import {resolve} from 'path';
 
-const filename = __dirname + '/module';
-type Methods = typeof import('./module');
-
-const module = pool.module(filename).typed<Methods>();
+const specifier = resolve(__dirname, 'module');
+const module = pool.module(specifier);
 ```
 
-You can now call the exported functions from the module:
+To add TypeScript support, you can use the `typed()` method:
 
 ```ts
-const result = await module.exec('add', [1, 2]); // 3
+const typed = module.typed<typeof import('./module')>();
+```
+
+This will create a type-safe wrapper, which knows the types of the exported
+functions. You can now call the exported functions from the module in one of the
+following ways:
+
+#### Using the `.exec()` method
+
+This will execute the function in one of the threads in the thread pool and
+return the result as a promise.
+
+```ts
+const result = await typed.exec('add', [1, 2]); // 3
+```
+
+#### Using the `.ch()` method
+
+Every function call creates a channel, which is a duplex stream (more on that
+later). By calling the `.ch()` method, you can get a reference to the channel.
+
+You can get the final result of the function call from the `.result` promise:
+
+```ts
+const result = await typed.ch('add', [1, 2]).result; // 3
 ```
 
 
-### Loading a function
+#### Using the `.api()` builder
 
-This method will create a module out of a single function and load it in the
-thread pool.
+You can construct an "API" object of your module using the `.api()` method.
+
+```ts
+const api = typed.api();
+```
+
+This returns an object of all the exported functions, which you can call:
+
+```ts
+const result = await api.add(1, 2).result; // 3
+```
+
+
+#### Using the `.fn()` closure
+
+To use this method you need to make sure that you module is loaded in at least
+one thread. You can achieve that by calling the `module.init()` method.
+
+```ts
+await module.init();
+```
+
+Now you can create a closure for you function
+
+```ts
+const add = typed.fn('add');
+```
+
+and run it as a function (it returns a channel)
+
+```ts
+const result = await add(1, 2).result; // 3
+```
+
+
+### Single function modules
+
+The `fun()` method will create a module out of a single function and load it in
+the main thread pool.
 
 ```ts
 import {fun} from 'node-multicore';
@@ -114,11 +240,21 @@ const fn = fun((a: number, b: number) => a + b);
 const result = await fn(1, 2); // 3
 ```
 
-### Channels
+Note, when using the `fun()` method do not get access to the underlying channel
+and you can specify all function arguments in function call `fn(1, 2)` instead of
+as an array `fn([1, 2])`.
 
-Channels are a way to stream data to a function and back. A channel is created
-for each function call. The channel is a duplex stream, which means you can
-write to it and read from it.
+Under the hood, the `fun()` method creates a module with a single function. You
+can achieve that manually as well:
+
+```ts
+const module = pool.fun((a: number, b: number) => a + b);
+```
+
+Now the `module` object is just like any other module, the single function is
+exported as `default`.
+
+Note, you function cannot access any variables outside of its scope.
 
 
 ### Dynamic CommonJs modules
@@ -146,7 +282,7 @@ exports.get = () => state;
 `;
 ```
 
-Load it using the `pool.js()` method:
+Load it using the `pool.cjs()` method:
 
 ```ts
 const module = pool.cjs(text);
@@ -181,6 +317,162 @@ node -r ts-node/register src/demo/cjs-text.ts
 ```
 
 
+### *Module Expressions*
+
+[ECMAScript *Module Expressions*](https://github.com/tc39/proposal-module-expressions)
+proposal will allow to create anonymous modules at runtime, which can then be
+copied to other threads. This library will support this proposal once it is
+implemented in Node.js.
+
+
+## Module exports
+
+Modules are loaded in worker threads and their exports become available in the
+main thread. Below we describe how different types of exports are handled.
+
+
+### Functions
+
+The most common export is a function, which receives a single "payload" argument.
+The function can be async as well as synchronous. The return value of the function
+is sent back to the main thread.
+
+```ts
+import {WorkerFn} from 'node-multicore';
+
+export const add: WorkerFn<[a: number, b: number], number> = ([a, b]) => {
+  return a + b;
+};
+```
+
+
+### Channels
+
+Channels are functions, which accept 2 or 3 arguments. The first argument is a
+"payload" argument, which is the same as for regular functions. The next two
+arguments are "send" and "receive" methods, which can be used to send and receive
+data from the main thread.
+
+```ts
+import {WorkerCh, taker} from 'node-multicore';
+
+export const addThreeNumbers: WorkerCh<number, number, number, void> = async (one, send, recv) => {
+  const take = taker(recv);
+  const two = await take();
+  const three = await take();
+  return one + two + three;
+};
+```
+
+The channel is open until the function returns. You can use the `taker()` helper
+to create a function, which will wait for the next value from the channel.
+
+
+### Promises
+
+If module exports a promise, when called from the main thread the promise will
+be resolved first and then: (1) if the promise resolves to a function, the
+function will be called with the payload argument, (2) if the promise resolves
+to anything else, the value will be returned.
+
+
+### Other exports
+
+All other exports are returned to the main thread as is, using the `postMessage`
+copy algorithm.
+
+
+## Advanced concepts
+
+### Pinning a thread
+
+Sometimes your threads need to share state. In that case you may want to pin
+a series of module calls to the same thread. You can do that by calling the
+`pinned()` method on a module.
+
+```ts
+const pinned = module.pinned();
+```
+
+Then use the `pinned` object to call the module functions:
+
+```ts
+const result = await pinned.ch('add', [1, 2]).result;
+``` 
+
+All calls through the `pinned` instance will be executed on the same thread.
+
+
+### Transferring data by ownership
+
+When you are sending data between threads, the most efficient way is to transfer
+ownership of the data. You can do that using the `ArrayBuffer` objects. This way
+the data will not be copied, but instead the buffers will be truncated in the
+current thread and become available in the new thread.
+
+Transfer buffers when executing a function:
+
+```ts
+module.exec('fn', params, [buffer1, buffer2, buffer3]);
+```
+
+Transfers buffers when writing to a channel from the main thread:
+
+```ts
+const channel = module.ch('fn', params, [buffer1, buffer2, buffer3]);
+
+channel.send(123, [buffer4, buffer5, buffer6]);
+```
+
+Transfer buffers when returning a value using the `msg` helper:
+
+```ts
+import {msg} from 'node-multicore';
+
+export const add = ([a: number, b: number]) => {
+  return msg(a + b, [buffer1, buffer2, buffer3]);
+};
+```
+
+Transfer buffers when writing to a channel from a worker thread:
+
+```ts
+export const method = (params, send, recv) => {
+  send(123, [buffer1, buffer2, buffer3]);
+  send(456, [buffer4, buffer5, buffer6]);
+  return 123;
+};
+```
+
+
+## Multicore packages
+
+Use this shared thread pool to improve performance of compute intensive NPM
+packages. Say, there is a package `foo` which performs some heavy computations.
+Create a new package `foo.multicore` and use this library to improve performance
+of the `foo` package.
+
+`module.ts`:
+
+```ts
+import {foo as fooNative} from 'foo';
+
+export const foo = (params) => fooNative(...params);
+```
+
+`index.ts`:
+
+```ts
+import {pool} from 'node-multicore';
+
+const typed = pool.module(__dirname + '/module').typed<typeof import('./module')>();
+
+export const foo = async (...params) => {
+  return await typed.call('foo', params);
+};
+```
+
+
 ## Demo / Benchmark
 
 Run a demo with the following commands:
@@ -189,9 +481,6 @@ Run a demo with the following commands:
 yarn
 yarn demo
 ```
-
-The demo executes this [`work` function](demo/module.js) on a single core vs.
-in the thread pool. The results are printed to the console.
 
 Sample output:
 

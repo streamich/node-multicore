@@ -10,19 +10,21 @@
   "repository": "streamich/node-multicore",
   "license": "Unlicense",
   "engines": {
-    "node": ">=10.0"
+    "node": ">=16.0"
   },
+  "type": "commonjs",
   "main": "lib/index.js",
-  "module": "esm/index.js",
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
+  "exports": [
+    "lib/index.js",
+    "lib/index.d.ts"
+  ],
   "files": [
     "LICENSE",
-    "lib/",
-    "es6/",
-    "es2020/",
-    "esm/"
+    "lib/"
   ],
+  "packageManager": "yarn",
   "scripts": {
     "prettier": "prettier --ignore-path .gitignore --write 'src/**/*.{ts,tsx,js,jsx}'",
     "prettier:check": "prettier --ignore-path .gitignore --list-different 'src/**/*.{ts,tsx,js,jsx}'",
@@ -30,15 +32,11 @@
     "lint:fix": "yarn tslint --fix",
     "tslint": "tslint 'src/**/*.{js,jsx,ts,tsx}' -t verbose --project .",
     "clean": "rimraf lib es6 es2019 es2020 esm typedocs",
-    "build:es6": "tsc --project tsconfig.build.json --module commonjs --target es6 --outDir es6",
-    "build:es2020": "tsc --project tsconfig.build.json --module commonjs --target es2020 --outDir lib",
-    "build:esm": "tsc --project tsconfig.build.json --module ESNext --target ESNEXT --outDir esm",
-    "build:all": "concurrently \"yarn build:cjs\" \"yarn build:es6\" \"yarn build:es2020\" \"yarn build:esm\"",
-    "build": "yarn build:es2020",
+    "build": "tsc --project tsconfig.build.json --outDir lib",
     "test:all": "yarn lint && yarn test && yarn test:e2e",
     "jest": "node -r ts-node/register ./node_modules/.bin/jest --no-cache",
     "test": "yarn jest --maxWorkers 7",
-    "test:ci": "yarn jest --maxWorkers 3",
+    "test:ci": "yarn jest --maxWorkers 1",
     "test:e2e": "node -r ts-node/register src/demo/test.ts",
     "demo": "yarn build && node demo"
   },
