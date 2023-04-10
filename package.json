@@ -1,6 +1,6 @@
 {
   "name": "node-multicore",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Thread pool for Node.js, easily make your code run in parallel on multiple cores.",
   "author": {
     "name": "streamich",
